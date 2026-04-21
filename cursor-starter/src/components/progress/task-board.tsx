@@ -1,0 +1,173 @@
+"use client";
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/constants";
+import type { TaskWithAssignees } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PRIORITIES } from "@/lib/constants";
+import { TaskRow } from "@/components/progress/task-row";
+
+export function TaskBoard({
+  boardUserId,
+  tasksByStatus,
+  onMoveStatus,
+  onTogglePin,
+  onReviewPatch,
+  onCreateForUser,
+}: {
+  boardUserId: string;
+  tasksByStatus: Record<string, TaskWithAssignees[]>;
+  onMoveStatus: (task: TaskWithAssignees, direction: "left" | "right") => void;
+  onTogglePin: (task: TaskWithAssignees) => void;
+  onReviewPatch: (
+    taskId: string,
+    fields: {
+      review_platform: string | null;
+      review_role: string | null;
+      review_page: string | null;
+      review_test_step: string | null;
+    },
+  ) => void;
+  onCreateForUser: (
+    userId: string,
+    title: string,
+    priority: number,
+    createdBy: string | null,
+  ) => Promise<void>;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState(3);
+
+  async function submitInline() {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await onCreateForUser(boardUserId, trimmed, priority, user?.id ?? null);
+    setTitle("");
+    setPriority(3);
+    setAdding(false);
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Use arrows to move tasks across statuses. Pinned tasks stay at the top of each status group.
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={() => setAdding((v) => !v)}
+        >
+          <Plus className="mr-1 size-4" />
+          Add task
+        </Button>
+      </div>
+
+      {adding ? (
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid gap-3 rounded-lg border bg-muted/30 p-4 md:grid-cols-[1fr_160px_auto]"
+        >
+          <div className="space-y-2">
+            <Label htmlFor="inline-task-title">Title</Label>
+            <Input
+              id="inline-task-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Quick add for this teammate"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setAdding(false);
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void submitInline();
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Priority</Label>
+            <Select
+              value={String(priority)}
+              onValueChange={(v) => setPriority(Number(v))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITIES.map((p) => (
+                  <SelectItem key={p.value} value={String(p.value)}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end gap-2">
+            <Button type="button" onClick={() => void submitInline()}>
+              Save
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
+              Cancel
+            </Button>
+          </div>
+        </motion.div>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-4">
+        {TASK_STATUSES.map((status) => (
+          <section key={status} className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold tracking-tight">
+                {TASK_STATUS_LABELS[status]}
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {(tasksByStatus[status] ?? []).length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              <AnimatePresence initial={false}>
+                {(tasksByStatus[status] ?? []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {status === "assigned"
+                      ? "No tasks yet — add one above."
+                      : "Nothing here yet."}
+                  </p>
+                ) : (
+                  (tasksByStatus[status] ?? []).map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      onMove={(dir) => onMoveStatus(task, dir)}
+                      onTogglePin={() => onTogglePin(task)}
+                      onReviewPatch={onReviewPatch}
+                    />
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}

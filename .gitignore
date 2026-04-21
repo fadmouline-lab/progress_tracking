@@ -1,0 +1,9 @@
+# Root + workspace
+node_modules/
+.DS_Store
+*.log
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp

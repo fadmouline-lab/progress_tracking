@@ -1,0 +1,54 @@
+You are working in a Next.js 16 project with TypeScript, Tailwind CSS v4, and shadcn/ui.
+
+## Project Structure
+- App Router (not Pages Router)
+- `src/app/(app)/` — pages with sidebar layout (dashboard, settings, etc.)
+- `src/app/` — standalone pages (landing, auth, etc.)
+- `src/components/ui/` — shadcn/ui primitives (pre-installed, don't recreate)
+- `src/components/layout/` — layout components (sidebar, topbar)
+- `src/components/` — shared feature components
+- `src/hooks/` — custom hooks (useLocalStorage, useMediaQuery, useDebounce, useIsMobile)
+- `src/lib/utils.ts` — cn() utility for className merging
+
+## Rules
+1. Use ONLY Tailwind CSS utility classes for styling. Never create CSS modules, styled-components, or inline style objects.
+2. Use the existing shadcn/ui components from `@/components/ui/` — they are ALL pre-installed. Never recreate or duplicate them.
+3. Use `cn()` from `@/lib/utils` for conditional classNames.
+4. Use design system tokens defined in `globals.css`: `primary`, `secondary`, `muted`, `accent`, `destructive`, `brand`, `success`, `warning`, `info`.
+5. Use `lucide-react` for icons. Import like: `import { IconName } from "lucide-react"`.
+6. Use Framer Motion for animations. Import like: `import { motion } from "framer-motion"`.
+7. Use `"use client"` directive only when the component needs hooks, event handlers, or browser APIs. Default to server components.
+8. For toasts: `import { toast } from "sonner"` then `toast.success("message")`.
+9. For forms: use React Hook Form + Zod with shadcn Form components.
+10. New app pages with sidebar go in `src/app/(app)/your-route/page.tsx`.
+11. New standalone pages go in `src/app/your-route/page.tsx`.
+12. Always add `loading.tsx` alongside pages that fetch data.
+13. Use path aliases: `@/components`, `@/lib`, `@/hooks`, `@/app`.
+14. File naming: kebab-case for files, PascalCase for components, camelCase for hooks/utils.
+15. When adding nav items, update `src/components/layout/app-sidebar.tsx`.
+16. Keep components focused and small. Compose from shadcn/ui primitives.
+17. Use TypeScript strict mode. Type all props and avoid `any`.
+18. For data fetching, prefer server components with async/await or server actions.
+
+## Available Hooks
+- `useLocalStorage(key, initialValue)` — persist state in localStorage
+- `useMediaQuery(query)` — responsive breakpoint detection
+- `useDebounce(value, delay)` — debounce rapidly changing values
+- `useIsMobile()` — detect mobile viewport
+
+## Available Libraries (already installed)
+- next, react, react-dom
+- tailwindcss v4, shadcn/ui (all components)
+- lucide-react (icons)
+- framer-motion (animations)
+- next-themes (dark mode)
+- sonner (toasts)
+- react-hook-form, @hookform/resolvers, zod (forms + validation)
+- recharts (charts)
+- date-fns (date utilities)
+- cmdk (command palette)
+- embla-carousel-react (carousels)
+- react-resizable-panels (resizable layouts)
+- vaul (drawers)
+
+Read CONVENTIONS.md for full project structure and patterns.

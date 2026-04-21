@@ -1,0 +1,18 @@
+{
+  "name": "cursor-starter-pack",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix cursor-starter && npm install",
+    "dev": "cd cursor-starter && npm run dev",
+    "build": "cd cursor-starter && npm run build",
+    "start": "cd cursor-starter && npm run start",
+    "lint": "cd cursor-starter && npm run lint",
+    "format": "cd cursor-starter && npm run format",
+    "format:check": "cd cursor-starter && npm run format:check"
+  },
+  "devDependencies": {
+    "shadcn": "^3.8.5",
+    "tailwindcss": "file:cursor-starter/node_modules/tailwindcss",
+    "tw-animate-css": "file:cursor-starter/node_modules/tw-animate-css"
+  }
+}

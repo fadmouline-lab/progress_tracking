@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import type { TestBatch, TestItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,7 @@ export function CompletedList({
   itemsForBatch,
   completedNewItems,
   onRestoreNew,
+  onDeleteRow,
   saveRowFields,
   resolveMemberName,
 }: {
@@ -38,6 +39,7 @@ export function CompletedList({
   itemsForBatch: (batchId: string) => TestItem[];
   completedNewItems: TestItem[];
   onRestoreNew: (item: TestItem) => void;
+  onDeleteRow?: (item: TestItem) => void;
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   resolveMemberName: (userId: string | null) => string;
 }) {
@@ -90,6 +92,7 @@ export function CompletedList({
                           rows={rows}
                           emptyHint="This batch has no rows (unexpected)."
                           saveRowFields={saveRowFields}
+                          onDeleteRow={onDeleteRow}
                         />
                       </div>
                     </CollapsibleContent>
@@ -126,14 +129,28 @@ export function CompletedList({
                     {item.source_task_id ? " · Linked to Progress task" : null}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onRestoreNew(item)}
-                >
-                  Restore…
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onRestoreNew(item)}
+                  >
+                    Restore…
+                  </Button>
+                  {onDeleteRow && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="size-8 text-muted-foreground/30 hover:text-destructive/70"
+                      aria-label="Delete row"
+                      onClick={() => onDeleteRow(item)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

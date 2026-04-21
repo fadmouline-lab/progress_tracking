@@ -213,7 +213,7 @@ export function useTestItems(projectId: string) {
   );
 
   const completedNewFeatureItems = useMemo(
-    () => items.filter((i) => i.tab === "completed" && i.source_task_id != null),
+    () => items.filter((i) => i.tab === "completed" && i.checklist_batch_id == null),
     [items],
   );
 
@@ -399,6 +399,23 @@ export function useTestItems(projectId: string) {
     [items],
   );
 
+  const deleteRow = useCallback(
+    async (id: string) => {
+      const snapshot = items;
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("test_items").delete().eq("id", id);
+        if (error) throw new Error(error.message);
+      } catch (e) {
+        setItems(snapshot);
+        toast.error(e instanceof Error ? e.message : "Could not delete row.");
+        throw e;
+      }
+    },
+    [items],
+  );
+
   return {
     items,
     batches,
@@ -417,5 +434,6 @@ export function useTestItems(projectId: string) {
     itemsForBatch,
     patchItem,
     saveRowFields,
+    deleteRow,
   };
 }

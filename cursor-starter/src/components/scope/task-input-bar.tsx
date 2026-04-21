@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Flame, ArrowUp, Sparkles, Paintbrush, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { PRIORITIES } from "@/lib/constants";
+
+const PRIORITY_ICONS: Record<number, React.ElementType> = {
+  1: Flame,
+  2: ArrowUp,
+  3: Sparkles,
+  4: Paintbrush,
+  5: Clock,
+};
 import type { ProjectMemberWithProfile } from "@/components/project/project-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -121,11 +130,17 @@ export function TaskInputBar({
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => (
-                  <SelectItem key={p.value} value={String(p.value)}>
-                    <span className={p.textClass}>{p.label}</span>
-                  </SelectItem>
-                ))}
+                {PRIORITIES.map((p) => {
+                  const Icon = PRIORITY_ICONS[p.value];
+                  return (
+                    <SelectItem key={p.value} value={String(p.value)}>
+                      <span className={`flex items-center gap-1.5 ${p.textClass}`}>
+                        <Icon className="size-3.5 shrink-0" />
+                        {p.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <Button

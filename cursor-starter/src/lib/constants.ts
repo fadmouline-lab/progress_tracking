@@ -56,6 +56,7 @@ export const ROLES = [
   "foreman",
   "admin",
   "project_manager",
+  "shop_manager",
   "other",
 ] as const;
 
@@ -64,6 +65,7 @@ export const ROLE_LABELS: Record<string, string> = {
   foreman: "Foreman",
   admin: "Admin",
   project_manager: "Project Manager",
+  shop_manager: "Shop Manager",
   other: "Other",
 };
 

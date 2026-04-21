@@ -30,6 +30,9 @@ export function TestChecklistView() {
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [restoreTarget, setRestoreTarget] = useState<TestItem | null>(null);
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TestItem | null>(null);
+
   const resolveMemberName = useCallback(
     (userId: string | null) => {
       if (!userId) return "Unknown";
@@ -94,6 +97,22 @@ export function TestChecklistView() {
     }
   }, [restoreTarget, checklist]);
 
+  const onDeleteIntent = useCallback((item: TestItem) => {
+    setDeleteTarget(item);
+    setDeleteOpen(true);
+  }, []);
+
+  const onDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return;
+    try {
+      await checklist.deleteRow(deleteTarget.id);
+      toast.success("Row deleted.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete row.");
+      throw e;
+    }
+  }, [deleteTarget, checklist]);
+
   if (projectLoading || checklist.loading) {
     return (
       <div className="space-y-4">
@@ -115,6 +134,7 @@ export function TestChecklistView() {
               showAddRow
               onAddRow={() => void checklist.addRow("core")}
               saveRowFields={saveRowFields}
+              onDeleteRow={onDeleteIntent}
               footer={
                 <div className="flex justify-end">
                   <Button
@@ -137,6 +157,7 @@ export function TestChecklistView() {
               onAddRow={() => void checklist.addRow("new")}
               saveRowFields={saveRowFields}
               onResultPassOrFixed={onPassIntent}
+              onDeleteRow={onDeleteIntent}
             />
           ),
           completed: (
@@ -152,6 +173,7 @@ export function TestChecklistView() {
               itemsForBatch={checklist.itemsForBatch}
               completedNewItems={checklist.completedNewFeatureItems}
               onRestoreNew={onRestoreClick}
+              onDeleteRow={onDeleteIntent}
               saveRowFields={saveRowFields}
               resolveMemberName={resolveMemberName}
             />
@@ -183,6 +205,19 @@ export function TestChecklistView() {
         confirmLabel="Restore"
         cancelLabel="Cancel"
         onConfirm={onRestoreConfirm}
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={(o) => {
+          setDeleteOpen(o);
+          if (!o) setDeleteTarget(null);
+        }}
+        title="Delete this row?"
+        description="This permanently removes the row from the checklist. This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={onDeleteConfirm}
       />
     </div>
   );

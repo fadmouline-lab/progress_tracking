@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquarePlus, Monitor, Smartphone } from "lucide-react";
+import { MessageSquarePlus, Monitor, Smartphone, Trash2 } from "lucide-react";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   PLATFORMS,
@@ -54,11 +54,13 @@ export function TestRow({
   tab,
   saveRowFields,
   onResultPassOrFixed,
+  onDelete,
 }: {
   item: TestItem;
   tab: "core" | "new" | "completed";
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (next: "pass" | "fixed") => void;
+  onDelete?: () => void;
 }) {
   const [textDraft, setTextDraft] = useState<TextDraft>(() => draftFromItem(item));
 
@@ -264,6 +266,20 @@ export function TestRow({
               </div>
             </PopoverContent>
           </Popover>
+        </TableCell>
+        <TableCell className="w-10 text-center">
+          {onDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground/30 hover:text-destructive/70"
+              aria-label="Delete row"
+              onClick={onDelete}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
         </TableCell>
     </motion.tr>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Flame, ArrowUp, Sparkles, Paintbrush, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/constants";
 import type { TaskWithAssignees } from "@/types";
@@ -28,12 +28,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const PRIORITY_BG: Record<number, string> = {
-  1: "#ef4444",
-  2: "#f97316",
-  3: "#eab308",
-  4: "#60a5fa",
-  5: "#a1a1aa",
+const PRIORITY_ICONS: Record<number, React.ElementType> = {
+  1: Flame,
+  2: ArrowUp,
+  3: Sparkles,
+  4: Paintbrush,
+  5: Clock,
 };
 
 const COLUMN_HEADER_CLASS: Record<string, string> = {
@@ -157,16 +157,17 @@ export function TaskBoard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => (
-                  <SelectItem
-                    key={p.value}
-                    value={String(p.value)}
-                    className="text-white"
-                    style={{ backgroundColor: PRIORITY_BG[p.value] }}
-                  >
-                    {p.label}
-                  </SelectItem>
-                ))}
+                {PRIORITIES.map((p) => {
+                  const Icon = PRIORITY_ICONS[p.value];
+                  return (
+                    <SelectItem key={p.value} value={String(p.value)}>
+                      <span className={`flex items-center gap-1.5 ${p.textClass}`}>
+                        <Icon className="size-3.5 shrink-0" />
+                        {p.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

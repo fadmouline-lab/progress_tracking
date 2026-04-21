@@ -23,6 +23,7 @@ export function TestTable({
   footer,
   saveRowFields,
   onResultPassOrFixed,
+  onDeleteRow,
 }: {
   tab: "core" | "new" | "completed";
   rows: TestItem[];
@@ -32,6 +33,7 @@ export function TestTable({
   footer?: React.ReactNode;
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (item: TestItem, next: "pass" | "fixed") => void;
+  onDeleteRow?: (item: TestItem) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -57,6 +59,7 @@ export function TestTable({
               <TableHead>Test Step</TableHead>
               <TableHead>Result</TableHead>
               <TableHead className="w-10" />
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,7 +67,7 @@ export function TestTable({
               <TableRow>
                 <TableCell
                   className="py-8 text-center text-sm text-muted-foreground"
-                  colSpan={7}
+                  colSpan={8}
                 >
                   {emptyHint}
                 </TableCell>
@@ -82,6 +85,7 @@ export function TestTable({
                         ? (next) => onResultPassOrFixed(item, next)
                         : undefined
                     }
+                    onDelete={onDeleteRow ? () => onDeleteRow(item) : undefined}
                   />
                 ))}
               </AnimatePresence>

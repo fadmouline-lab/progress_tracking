@@ -42,7 +42,10 @@ export function TaskRow({
       transition={{ type: "spring", stiffness: 420, damping: 34 }}
     >
       <div
-        className="w-full cursor-pointer px-3 py-2.5 transition-colors hover:bg-accent/50"
+        className={cn(
+          "w-full cursor-pointer px-3 py-2.5 transition-colors hover:bg-accent/50",
+          task.status === "waiting_review" && "border-l-2 border-l-warning",
+        )}
         onClick={onSelect}
         role="button"
         tabIndex={0}
@@ -81,7 +84,7 @@ export function TaskRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-6 shrink-0"
+                className="size-6 shrink-0 [&_svg]:transition-colors hover:[&_svg]:text-emerald-500"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMarkComplete();

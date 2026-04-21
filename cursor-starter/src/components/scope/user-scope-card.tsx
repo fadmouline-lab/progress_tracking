@@ -78,25 +78,21 @@ export function UserScopeCard({
     <Card className="flex h-full flex-col border shadow-sm">
       <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
         <UserAvatar name={name} avatarUrl={member.profile?.avatar_url} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <CardTitle className="truncate text-base">{name}</CardTitle>
           <CardDescription>Scope summary & assigned tasks</CardDescription>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onAddBullet(member.user_id)}
+        >
+          <Plus className="mr-1 size-4" />
+          General Scope
+        </Button>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-muted-foreground">Scope bullets</p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onAddBullet(member.user_id)}
-          >
-            <Plus className="mr-1 size-4" />
-            Add bullet
-          </Button>
-        </div>
-
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -104,21 +100,15 @@ export function UserScopeCard({
         >
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <div className="flex flex-col gap-2">
-              {bullets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No bullets yet — capture what this person is focused on.
-                </p>
-              ) : (
-                bullets.map((b) => (
-                  <ScopeBullet
-                    key={b.id}
-                    bullet={b}
-                    onRemove={onRemoveBullet}
-                    persistBulletContent={persistBulletContent}
-                    onContentChange={onContentChange}
-                  />
-                ))
-              )}
+              {bullets.map((b) => (
+                <ScopeBullet
+                  key={b.id}
+                  bullet={b}
+                  onRemove={onRemoveBullet}
+                  persistBulletContent={persistBulletContent}
+                  onContentChange={onContentChange}
+                />
+              ))}
             </div>
           </SortableContext>
         </DndContext>
@@ -147,7 +137,7 @@ export function UserScopeCard({
               <AnimatePresence initial={false}>
                 {assignedTasks.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No assigned tasks yet — add one above.
+                    No assigned tasks yet.
                   </p>
                 ) : (
                   assignedTasks.map((t) => (

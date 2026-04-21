@@ -2,31 +2,22 @@
 
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pin } from "lucide-react";
-import { TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/constants";
+import { TASK_STATUSES } from "@/lib/constants";
 import type { TaskWithAssignees } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PriorityBadge } from "@/components/shared/priority-badge";
-import { ReviewFields } from "@/components/progress/review-fields";
 import { cn } from "@/lib/utils";
 
 export function TaskRow({
   task,
   onMove,
   onTogglePin,
-  onReviewPatch,
+  onSelect,
 }: {
   task: TaskWithAssignees;
   onMove: (direction: "left" | "right") => void;
   onTogglePin: () => void;
-  onReviewPatch: (
-    id: string,
-    fields: {
-      review_platform: string | null;
-      review_role: string | null;
-      review_page: string | null;
-      review_test_step: string | null;
-    },
-  ) => void;
+  onSelect: () => void;
 }) {
   const idx = TASK_STATUSES.indexOf(task.status as (typeof TASK_STATUSES)[number]);
   const canLeft = idx > 0;
@@ -37,56 +28,71 @@ export function TaskRow({
       layout
       layoutId={`task-${task.id}`}
       transition={{ type: "spring", stiffness: 420, damping: 34 }}
-      className="rounded-lg border bg-card"
+      className="flex w-full cursor-pointer flex-col gap-1 px-3 py-2.5 transition-colors hover:bg-accent/50"
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
     >
-      <div className="flex flex-wrap items-center gap-3 p-3">
+      <div className="flex items-center gap-2">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onClick={onTogglePin}
+          className="size-6 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePin();
+          }}
           aria-label={task.is_pinned ? "Unpin task" : "Pin task"}
         >
           <Pin
             className={cn(
-              "size-4",
+              "size-3",
               task.is_pinned ? "text-primary" : "text-muted-foreground",
             )}
           />
         </Button>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium leading-tight">{task.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {TASK_STATUS_LABELS[task.status] ?? task.status}
-          </p>
-        </div>
-        <PriorityBadge priority={task.priority} className="shrink-0 text-xs" />
-        <div className="flex shrink-0 items-center gap-1">
+        <p className="min-w-0 flex-1 truncate text-sm font-medium leading-tight">{task.title}</p>
+      </div>
+      <div className="flex items-center justify-between pl-8">
+        <PriorityBadge priority={task.priority} className="text-xs" />
+        <div className="flex items-center gap-0.5">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
+            className="size-6"
             disabled={!canLeft}
-            onClick={() => onMove("left")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove("left");
+            }}
             aria-label="Move status back"
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-3.5" />
           </Button>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
+            className="size-6"
             disabled={!canRight}
-            onClick={() => onMove("right")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove("right");
+            }}
             aria-label="Move status forward"
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-3.5" />
           </Button>
         </div>
       </div>
-      {task.status === "waiting_review" ? (
-        <ReviewFields key={task.id} task={task} onPatch={onReviewPatch} />
-      ) : null}
     </motion.div>
   );
 }

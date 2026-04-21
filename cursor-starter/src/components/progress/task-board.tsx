@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { PRIORITIES } from "@/lib/constants";
 import { TaskRow } from "@/components/progress/task-row";
+import { TaskDetailDialog } from "@/components/progress/task-detail-dialog";
 
 export function TaskBoard({
   boardUserId,
@@ -50,6 +51,12 @@ export function TaskBoard({
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState(3);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const selectedTask =
+    selectedTaskId !== null
+      ? (Object.values(tasksByStatus).flat().find((t) => t.id === selectedTaskId) ?? null)
+      : null;
 
   async function submitInline() {
     const trimmed = title.trim();
@@ -66,10 +73,7 @@ export function TaskBoard({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          Use arrows to move tasks across statuses. Pinned tasks stay at the top of each status group.
-        </p>
+      <div className="flex items-center justify-end">
         <Button
           type="button"
           size="sm"
@@ -133,41 +137,51 @@ export function TaskBoard({
         </motion.div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        {TASK_STATUSES.map((status) => (
-          <section key={status} className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold tracking-tight">
-                {TASK_STATUS_LABELS[status]}
-              </h3>
-              <span className="text-xs text-muted-foreground">
-                {(tasksByStatus[status] ?? []).length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              <AnimatePresence initial={false}>
-                {(tasksByStatus[status] ?? []).length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    {status === "assigned"
-                      ? "No tasks yet — add one above."
-                      : "Nothing here yet."}
-                  </p>
-                ) : (
-                  (tasksByStatus[status] ?? []).map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      onMove={(dir) => onMoveStatus(task, dir)}
-                      onTogglePin={() => onTogglePin(task)}
-                      onReviewPatch={onReviewPatch}
-                    />
-                  ))
-                )}
-              </AnimatePresence>
-            </div>
-          </section>
-        ))}
+      <div className="grid gap-4 lg:grid-cols-4">
+        {TASK_STATUSES.map((status) => {
+          const tasks = tasksByStatus[status] ?? [];
+          return (
+            <section key={status} className="overflow-hidden rounded-lg border">
+              <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-3 py-2">
+                <h3 className="text-sm font-semibold tracking-tight">
+                  {TASK_STATUS_LABELS[status]}
+                </h3>
+                <span className="text-xs text-muted-foreground">{tasks.length}</span>
+              </div>
+              <div className="flex flex-col divide-y">
+                <AnimatePresence initial={false}>
+                  {tasks.length === 0 ? (
+                    <p className="px-3 py-4 text-xs text-muted-foreground">
+                      No tasks yet.
+                    </p>
+                  ) : (
+                    tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        onMove={(dir) => onMoveStatus(task, dir)}
+                        onTogglePin={() => onTogglePin(task)}
+                        onSelect={() => setSelectedTaskId(task.id)}
+                      />
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
+            </section>
+          );
+        })}
       </div>
+
+      <TaskDetailDialog
+        task={selectedTask}
+        open={selectedTask !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTaskId(null);
+        }}
+        onMove={onMoveStatus}
+        onTogglePin={onTogglePin}
+        onReviewPatch={onReviewPatch}
+      />
     </div>
   );
 }

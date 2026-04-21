@@ -8,7 +8,6 @@ import type { ProjectMemberWithProfile } from "@/components/project/project-prov
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -72,13 +71,12 @@ export function TaskInputBar({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
     >
-      <Card className="mx-auto w-full max-w-3xl border shadow-sm">
-        <CardContent className="space-y-4 p-4">
-          <div className="space-y-2">
-            <Label htmlFor="scope-task-title">New task</Label>
+      <Card className="mx-auto w-full max-w-5xl border shadow-sm">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-3">
             <Input
               id="scope-task-title"
-              placeholder="Describe the task, assign people, set priority…"
+              placeholder="Describe the task…"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -87,64 +85,56 @@ export function TaskInputBar({
                   void submit();
                 }
               }}
+              className="flex-1"
             />
-          </div>
-          <div className="flex flex-col gap-4 md:flex-row md:items-start">
-            <div className="flex-1 space-y-2">
-              <Label>Assign to</Label>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {members.map((m) => {
-                  const id = m.user_id;
-                  const name =
-                    m.profile?.full_name?.trim() ||
-                    m.profile?.email ||
-                    "Member";
-                  return (
-                    <label
-                      key={id}
-                      className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm"
-                    >
-                      <Checkbox
-                        checked={!!assignees[id]}
-                        onCheckedChange={(v) =>
-                          setAssignees((prev) => ({
-                            ...prev,
-                            [id]: v === true,
-                          }))
-                        }
-                      />
-                      <span className="truncate">{name}</span>
-                    </label>
-                  );
-                })}
-              </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {members.map((m) => {
+                const id = m.user_id;
+                const name =
+                  m.profile?.full_name?.trim() ||
+                  m.profile?.email ||
+                  "Member";
+                return (
+                  <label
+                    key={id}
+                    className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <Checkbox
+                      checked={!!assignees[id]}
+                      onCheckedChange={(v) =>
+                        setAssignees((prev) => ({
+                          ...prev,
+                          [id]: v === true,
+                        }))
+                      }
+                    />
+                    <span>{name}</span>
+                  </label>
+                );
+              })}
             </div>
-            <div className="w-full space-y-2 md:w-56">
-              <Label>Priority</Label>
-              <Select
-                value={String(priority)}
-                onValueChange={(v) => setPriority(Number(v))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITIES.map((p) => (
-                    <SelectItem key={p.value} value={String(p.value)}>
-                      <span className={p.textClass}>{p.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex justify-end">
+            <Select
+              value={String(priority)}
+              onValueChange={(v) => setPriority(Number(v))}
+            >
+              <SelectTrigger className="w-44 shrink-0">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITIES.map((p) => (
+                  <SelectItem key={p.value} value={String(p.value)}>
+                    <span className={p.textClass}>{p.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               type="button"
               onClick={() => void submit()}
               disabled={
                 submitting || !title.trim() || !Object.values(assignees).some(Boolean)
               }
+              className="shrink-0"
             >
               {submitting ? "Adding…" : "Add task"}
             </Button>

@@ -76,16 +76,19 @@ export function UserScopeCard({
 
   return (
     <Card className="flex h-full flex-col border shadow-sm">
-      <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
-        <UserAvatar name={name} avatarUrl={member.profile?.avatar_url} />
-        <div className="min-w-0 flex-1">
-          <CardTitle className="truncate text-base">{name}</CardTitle>
-          <CardDescription>Scope summary & assigned tasks</CardDescription>
+      <CardHeader className="flex flex-col gap-2 space-y-0 pb-2 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <UserAvatar name={name} avatarUrl={member.profile?.avatar_url} />
+          <div className="min-w-0 flex-1">
+            <CardTitle className="truncate text-base">{name}</CardTitle>
+            <CardDescription>Scope summary & assigned tasks</CardDescription>
+          </div>
         </div>
         <Button
           type="button"
           size="sm"
           variant="outline"
+          className="min-h-[44px] w-full sm:w-auto"
           onClick={() => onAddBullet(member.user_id)}
         >
           <Plus className="mr-1 size-4" />

@@ -95,6 +95,14 @@ export function TaskBoard({
   const [priority, setPriority] = useState(3);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [completingTask, setCompletingTask] = useState<TaskWithAssignees | null>(null);
+  const [mobileTab, setMobileTab] = useState<string>("working_on");
+
+  const COLUMN_MOBILE_LABELS: Record<string, string> = {
+    assigned: "Queue",
+    working_on: "Active",
+    waiting_review: "Review",
+    completed: "Done",
+  };
 
   const selectedTask =
     selectedTaskId !== null
@@ -186,8 +194,78 @@ export function TaskBoard({
         </motion.div>
       ) : null}
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: "4fr 2fr 2fr 2fr" }}>
-        {TASK_STATUSES.map((status, colIdx) => {
+      {/* Mobile: tab-switcher (hidden on md+) */}
+      <div className="md:hidden">
+        <div className="flex gap-1 rounded-lg border bg-muted/30 p-1">
+          {TASK_STATUSES.map((status) => {
+            const tasks = tasksByStatus[status] ?? [];
+            const isActive = mobileTab === status;
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setMobileTab(status)}
+                className={cn(
+                  "flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-2 text-xs font-medium transition-colors",
+                  isActive
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span className="leading-none">{COLUMN_MOBILE_LABELS[status]}</span>
+                <span className={cn(
+                  "text-[10px] font-semibold tabular-nums leading-none",
+                  isActive && tasks.length > 0 ? COLUMN_COUNT_CLASS[status] : "text-muted-foreground",
+                )}>
+                  {tasks.length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {TASK_STATUSES.filter((s) => s === mobileTab).map((status) => {
+          const tasks = tasksByStatus[status] ?? [];
+          return (
+            <section key={status} className="mt-2 overflow-hidden rounded-lg border">
+              <div className={cn("flex items-center justify-between gap-2 border-b px-3 py-2", COLUMN_HEADER_CLASS[status])}>
+                <h3 className="text-sm font-semibold tracking-tight">{TASK_STATUS_LABELS[status]}</h3>
+                <span className={cn("text-xs font-medium tabular-nums", tasks.length > 0 ? COLUMN_COUNT_CLASS[status] : "text-muted-foreground")}>{tasks.length}</span>
+              </div>
+              <div className="flex flex-col divide-y">
+                <AnimatePresence initial={false}>
+                  {tasks.length === 0 ? (
+                    <p className="px-3 py-4 text-xs text-muted-foreground">No tasks yet.</p>
+                  ) : (
+                    tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        showBadge={true}
+                        isTested={testedTaskIds.has(task.id)}
+                        hasActiveTest={activeTestTaskIds.has(task.id)}
+                        testChecklistUrl={testChecklistUrl}
+                        onMove={(dir) => {
+                          onMoveStatus(task, dir);
+                          const nextIdx = TASK_STATUSES.indexOf(task.status as (typeof TASK_STATUSES)[number]) + (dir === "right" ? 1 : -1);
+                          if (TASK_STATUSES[nextIdx] === "waiting_review") setSelectedTaskId(task.id);
+                        }}
+                        onTogglePin={() => onTogglePin(task)}
+                        onMarkComplete={() => setCompletingTask(task)}
+                        onSelect={() => setSelectedTaskId(task.id)}
+                      />
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {/* Desktop: 4-column grid (hidden on mobile) */}
+      <div className="hidden md:grid md:grid-cols-[4fr_2fr_2fr_2fr] md:gap-4">
+        {TASK_STATUSES.map((status) => {
           const tasks = tasksByStatus[status] ?? [];
           const showBadge = true;
           return (

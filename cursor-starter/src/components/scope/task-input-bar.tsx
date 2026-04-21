@@ -82,7 +82,7 @@ export function TaskInputBar({
     >
       <Card className="mx-auto w-full max-w-5xl border shadow-sm">
         <CardContent className="p-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <Input
               id="scope-task-title"
               placeholder="Describe the task…"
@@ -96,7 +96,7 @@ export function TaskInputBar({
               }}
               className="flex-1"
             />
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex flex-wrap gap-2 md:shrink-0 md:flex-nowrap md:items-center">
               {members.map((m) => {
                 const id = m.user_id;
                 const name =
@@ -106,7 +106,7 @@ export function TaskInputBar({
                 return (
                   <label
                     key={id}
-                    className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm whitespace-nowrap"
+                    className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm whitespace-nowrap"
                   >
                     <Checkbox
                       checked={!!assignees[id]}
@@ -122,37 +122,39 @@ export function TaskInputBar({
                 );
               })}
             </div>
-            <Select
-              value={String(priority)}
-              onValueChange={(v) => setPriority(Number(v))}
-            >
-              <SelectTrigger className="w-44 shrink-0">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                {PRIORITIES.map((p) => {
-                  const Icon = PRIORITY_ICONS[p.value];
-                  return (
-                    <SelectItem key={p.value} value={String(p.value)}>
-                      <span className={`flex items-center gap-1.5 ${p.textClass}`}>
-                        <Icon className="size-3.5 shrink-0" />
-                        {p.label}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              onClick={() => void submit()}
-              disabled={
-                submitting || !title.trim() || !Object.values(assignees).some(Boolean)
-              }
-              className="shrink-0"
-            >
-              {submitting ? "Assigning…" : "Assign task"}
-            </Button>
+            <div className="flex gap-2 md:contents">
+              <Select
+                value={String(priority)}
+                onValueChange={(v) => setPriority(Number(v))}
+              >
+                <SelectTrigger className="flex-1 md:w-44 md:flex-none md:shrink-0">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => {
+                    const Icon = PRIORITY_ICONS[p.value];
+                    return (
+                      <SelectItem key={p.value} value={String(p.value)}>
+                        <span className={`flex items-center gap-1.5 ${p.textClass}`}>
+                          <Icon className="size-3.5 shrink-0" />
+                          {p.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                onClick={() => void submit()}
+                disabled={
+                  submitting || !title.trim() || !Object.values(assignees).some(Boolean)
+                }
+                className="min-h-[44px] shrink-0"
+              >
+                {submitting ? "Assigning…" : "Assign task"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

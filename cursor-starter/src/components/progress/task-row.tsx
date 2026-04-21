@@ -61,7 +61,7 @@ export function TaskRow({
             type="button"
             variant="ghost"
             size="icon"
-            className="size-6 shrink-0"
+            className="size-6 shrink-0 max-md:h-11 max-md:w-11"
             onClick={(e) => {
               e.stopPropagation();
               onTogglePin();
@@ -84,7 +84,7 @@ export function TaskRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-6 shrink-0 [&_svg]:transition-colors hover:[&_svg]:text-emerald-500"
+                className="size-6 shrink-0 [&_svg]:transition-colors hover:[&_svg]:text-emerald-500 max-md:h-11 max-md:w-11"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMarkComplete();
@@ -114,7 +114,7 @@ export function TaskRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-6"
+              className="size-6 max-md:h-11 max-md:w-11"
               disabled={!canLeft}
               onClick={(e) => {
                 e.stopPropagation();
@@ -128,7 +128,7 @@ export function TaskRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-6"
+              className="size-6 max-md:h-11 max-md:w-11"
               disabled={!canRight || (task.status === "waiting_review" && hasActiveTest)}
               onClick={(e) => {
                 e.stopPropagation();

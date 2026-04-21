@@ -5,8 +5,10 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useProject, useProjectSaveSlot } from "@/hooks/use-project";
 import { useTestItems } from "@/hooks/use-test-items";
+import { useIsLg } from "@/hooks/use-mobile";
 import { TestSubtabs } from "@/components/test-checklist/test-subtabs";
 import { TestTable } from "@/components/test-checklist/test-table";
+import { TestCardList } from "@/components/test-checklist/test-card";
 import { CompletedList } from "@/components/test-checklist/completed-list";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ export function TestChecklistView() {
   const checklist = useTestItems(projectId);
   useProjectSaveSlot("test", checklist.saveState);
 
+  const isLg = useIsLg();
   const [sub, setSub] = useState<"core" | "new" | "completed">("new");
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null);
 
@@ -126,7 +129,7 @@ export function TestChecklistView() {
     <div className="mx-auto max-w-6xl space-y-6">
       <TestSubtabs value={sub} onValueChange={setSub}>
         {{
-          core: (
+          core: isLg ? (
             <TestTable
               tab="core"
               rows={coreRows}
@@ -147,9 +150,42 @@ export function TestChecklistView() {
                 </div>
               }
             />
+          ) : (
+            <TestCardList
+              tab="core"
+              rows={coreRows}
+              emptyHint="No core rows yet — add what you regression-test every release."
+              showAddRow
+              onAddRow={() => void checklist.addRow("core")}
+              saveRowFields={saveRowFields}
+              onDeleteRow={onDeleteIntent}
+              footer={
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    disabled={!checklist.coreCanSubmit}
+                    onClick={() => void onSubmitCore()}
+                  >
+                    Close and Submit
+                  </Button>
+                </div>
+              }
+            />
           ),
-          new: (
+          new: isLg ? (
             <TestTable
+              tab="new"
+              rows={newRows}
+              emptyHint="No new-feature rows — they appear when Progress tasks are Waiting on Review, or use Add row."
+              showAddRow
+              onAddRow={() => void checklist.addRow("new")}
+              saveRowFields={saveRowFields}
+              onResultPassOrFixed={onPassIntent}
+              onDeleteRow={onDeleteIntent}
+              taskTitles={checklist.taskTitles}
+            />
+          ) : (
+            <TestCardList
               tab="new"
               rows={newRows}
               emptyHint="No new-feature rows — they appear when Progress tasks are Waiting on Review, or use Add row."

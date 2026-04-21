@@ -17,7 +17,7 @@ export function ProjectTabs() {
   const { projectId } = useProjectContext();
 
   return (
-    <nav className="flex gap-1 border-b bg-muted/30 px-4">
+    <nav className="flex gap-1 overflow-x-auto border-b bg-muted/30 px-4 scrollbar-hide">
       {tabs.map((tab) => {
         const href = `/project/${projectId}/${tab.href}`;
         const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -26,7 +26,7 @@ export function ProjectTabs() {
             key={tab.href}
             href={href}
             className={cn(
-              "relative -mb-px flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
+              "relative -mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors md:px-4 md:py-3",
               active
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",

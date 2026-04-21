@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { ProjectWithMeta } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ProjectSelector } from "@/components/home/project-selector";
+import { Card, CardContent } from "@/components/ui/card";
 import { CreateProjectDialog } from "@/components/home/create-project-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "@/components/layout/profile-menu";
+import { Plus } from "lucide-react";
 
 async function loadProjects(): Promise<ProjectWithMeta[]> {
   const supabase = createClient();
@@ -40,7 +42,6 @@ async function loadProjects(): Promise<ProjectWithMeta[]> {
 export default function HomePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectWithMeta[]>([]);
-  const [selectOpen, setSelectOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -79,50 +80,68 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="flex w-full flex-1 flex-col justify-center px-6 py-16">
-        <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 text-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Your workspace</h1>
-            <p className="mt-2 text-muted-foreground">
-              Choose an existing project or create a new one.
-            </p>
+      <main className="flex w-full flex-1 flex-col px-6 py-10">
+        <div className="mx-auto w-full max-w-2xl">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Your workspace</h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">Current projects</p>
+            </div>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="mr-1.5 size-4" />
+              Create project
+            </Button>
           </div>
 
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading projects…</p>
+          ) : projects.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No projects yet — create one to get started.
+            </p>
           ) : (
-            <div className="flex w-full max-w-lg flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button
-                size="lg"
-                className="h-auto min-h-24 flex-1 py-6 text-lg"
-                variant="default"
-                onClick={() => setSelectOpen(true)}
-              >
-                Select project
-              </Button>
-              <Button
-                size="lg"
-                className="h-auto min-h-24 flex-1 py-6 text-lg"
-                variant="secondary"
-                onClick={() => setCreateOpen(true)}
-              >
-                Create project
-              </Button>
+            <div className="grid gap-3">
+              {projects.map((p) => (
+                <Link key={p.id} href={`/project/${p.id}/progress`}>
+                  <Card className="transition-colors hover:bg-muted/60">
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                        {p.logo_url ? (
+                          <img
+                            src={p.logo_url}
+                            alt=""
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+                            —
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{p.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {p.member_count}{" "}
+                          {p.member_count === 1 ? "member" : "members"}
+                        </p>
+                      </div>
+                      <Button type="button" size="sm" variant="secondary" tabIndex={-1}>
+                        Open
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
           )}
         </div>
-
-        <ProjectSelector
-          open={selectOpen}
-          onOpenChange={setSelectOpen}
-          projects={projects}
-        />
-        <CreateProjectDialog
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          onCreated={refresh}
-        />
       </main>
+
+      <CreateProjectDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={refresh}
+      />
     </div>
   );
 }

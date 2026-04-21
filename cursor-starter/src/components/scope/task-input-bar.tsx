@@ -151,7 +151,7 @@ export function TaskInputBar({
               }
               className="shrink-0"
             >
-              {submitting ? "Adding…" : "Add task"}
+              {submitting ? "Assigning…" : "Assign task"}
             </Button>
           </div>
         </CardContent>

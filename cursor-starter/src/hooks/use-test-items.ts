@@ -22,6 +22,7 @@ export function useTestItems(projectId: string) {
   const [batches, setBatches] = useState<TestBatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [taskTitles, setTaskTitles] = useState<Record<string, string>>({});
 
   const runWithSaveState = useCallback(async (fn: () => Promise<void>) => {
     setSaveState("saving");
@@ -59,8 +60,26 @@ export function useTestItems(projectId: string) {
       toast.error(batchesRes.error.message);
       return;
     }
-    setItems((itemsRes.data ?? []) as TestItem[]);
+    const loadedItems = (itemsRes.data ?? []) as TestItem[];
+    setItems(loadedItems);
     setBatches((batchesRes.data ?? []) as TestBatch[]);
+
+    const sourceIds = loadedItems
+      .map((i) => i.source_task_id)
+      .filter(Boolean) as string[];
+    if (sourceIds.length > 0) {
+      const { data: taskData } = await supabase
+        .from("tasks")
+        .select("id, title")
+        .in("id", sourceIds);
+      const map: Record<string, string> = {};
+      for (const t of taskData ?? []) {
+        map[t.id] = t.title;
+      }
+      setTaskTitles(map);
+    } else {
+      setTaskTitles({});
+    }
   }, [projectId]);
 
   useEffect(() => {
@@ -102,10 +121,12 @@ export function useTestItems(projectId: string) {
     );
 
     const ready = (tasks ?? []).filter((task) => {
-      if (!task.review_platform || !task.review_role) return false;
-      const page = (task.review_page ?? "").trim();
-      const step = (task.review_test_step ?? "").trim();
-      return page.length > 0 && step.length > 0;
+      return (
+        task.review_platform ||
+        task.review_role ||
+        (task.review_page ?? "").trim().length > 0 ||
+        (task.review_test_step ?? "").trim().length > 0
+      );
     });
 
     for (const task of ready) {
@@ -399,6 +420,50 @@ export function useTestItems(projectId: string) {
     [items],
   );
 
+  const insertTestItemForTask = useCallback(
+    async (
+      taskId: string,
+      fields: { platform: string | null; role: string | null; page_tab: string | null; test_step: string | null },
+    ) => {
+      const supabase = createClient();
+      const { data: existing } = await supabase
+        .from("test_items")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("source_task_id", taskId)
+        .maybeSingle();
+      if (existing) return;
+      const { data: nextRows } = await supabase
+        .from("test_items")
+        .select("sort_order")
+        .eq("project_id", projectId)
+        .eq("tab", "new")
+        .order("sort_order", { ascending: false })
+        .limit(1);
+      const nextOrder = (nextRows?.[0]?.sort_order ?? -1) + 1;
+      const { error } = await supabase.from("test_items").upsert(
+        {
+          project_id: projectId,
+          tab: "new",
+          source_task_id: taskId,
+          platform: fields.platform,
+          role: fields.role,
+          page_tab: fields.page_tab,
+          test_step: fields.test_step,
+          result: "pending",
+          sort_order: nextOrder,
+        },
+        { onConflict: "project_id,source_task_id", ignoreDuplicates: true },
+      );
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      await loadAll();
+    },
+    [projectId, loadAll],
+  );
+
   const deleteRow = useCallback(
     async (id: string) => {
       const snapshot = items;
@@ -421,6 +486,7 @@ export function useTestItems(projectId: string) {
     batches,
     loading,
     saveState,
+    taskTitles,
     refresh: loadAll,
     itemsByTab,
     coreCanSubmit,
@@ -435,5 +501,6 @@ export function useTestItems(projectId: string) {
     patchItem,
     saveRowFields,
     deleteRow,
+    insertTestItemForTask,
   };
 }

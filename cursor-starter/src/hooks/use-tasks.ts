@@ -314,6 +314,23 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
     [tasks],
   );
 
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      const snapshot = tasks;
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+        if (error) throw new Error(error.message);
+      } catch (e) {
+        setTasks(snapshot);
+        toast.error(e instanceof Error ? e.message : "Could not delete task.");
+        throw e;
+      }
+    },
+    [tasks],
+  );
+
   const patchReviewFields = useCallback(
     (
       taskId: string,
@@ -344,5 +361,6 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
     togglePin,
     tasksAssignedForScope,
     patchReviewFields,
+    deleteTask,
   };
 }

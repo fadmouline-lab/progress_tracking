@@ -69,16 +69,9 @@ export function ReviewFields({
   });
 
   function update(partial: Partial<ReviewValue>) {
-    setValue((prev) => {
-      const next = { ...prev, ...partial };
-      onPatch(task.id, {
-        review_platform: next.review_platform,
-        review_role: next.review_role,
-        review_page: next.review_page,
-        review_test_step: next.review_test_step,
-      });
-      return next;
-    });
+    const next = { ...value, ...partial };
+    setValue(next);
+    onPatch(task.id, next);
   }
 
   const platformValue = value.review_platform ?? "__none__";

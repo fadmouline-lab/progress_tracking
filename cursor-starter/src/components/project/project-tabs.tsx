@@ -7,9 +7,9 @@ import { useProjectContext } from "@/components/project/project-provider";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "scope", label: "Scope", icon: ListTodo },
   { href: "progress", label: "Progress", icon: Columns2 },
   { href: "test-checklist", label: "Test Checklist", icon: ClipboardCheck },
+  { href: "scope", label: "Scope", icon: ListTodo },
 ] as const;
 
 export function ProjectTabs() {

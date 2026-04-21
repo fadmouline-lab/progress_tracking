@@ -6,5 +6,5 @@ export default async function ProjectIndexPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  redirect(`/project/${projectId}/scope`);
+  redirect(`/project/${projectId}/progress`);
 }

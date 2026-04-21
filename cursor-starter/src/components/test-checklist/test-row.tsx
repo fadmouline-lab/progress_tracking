@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquarePlus, Monitor, Smartphone, Trash2 } from "lucide-react";
+import { Info, MessageSquarePlus, Monitor, Smartphone, Trash2 } from "lucide-react";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   PLATFORMS,
@@ -30,6 +30,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TableCell } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type TextDraft = {
   account: string;
@@ -55,12 +61,16 @@ export function TestRow({
   saveRowFields,
   onResultPassOrFixed,
   onDelete,
+  taskTitle,
+  showTaskColumn,
 }: {
   item: TestItem;
   tab: "core" | "new" | "completed";
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (next: "pass" | "fixed") => void;
   onDelete?: () => void;
+  taskTitle?: string;
+  showTaskColumn?: boolean;
 }) {
   const [textDraft, setTextDraft] = useState<TextDraft>(() => draftFromItem(item));
 
@@ -119,6 +129,22 @@ export function TestRow({
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
       className={cn("hover:bg-muted/50 border-b transition-colors align-top", ROW_BG[item.result])}
     >
+        {showTaskColumn && (
+          <TableCell className="w-8 pl-1 text-center">
+            {taskTitle && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="size-3.5 text-muted-foreground/40 cursor-default mx-auto" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-[220px] text-[0.975rem]">
+                    {taskTitle}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </TableCell>
+        )}
         <TableCell className="min-w-[120px]">
           <Select
             value={item.platform ?? "__none__"}
@@ -164,15 +190,6 @@ export function TestRow({
               ))}
             </SelectContent>
           </Select>
-        </TableCell>
-        <TableCell className="min-w-[120px]">
-          <Input
-            className="h-9"
-            value={textDraft.account}
-            onChange={(e) =>
-              setTextDraft((d) => ({ ...d, account: e.target.value }))
-            }
-          />
         </TableCell>
         <TableCell className="min-w-[140px]">
           <Input
@@ -232,7 +249,7 @@ export function TestRow({
                 size="icon"
                 className={cn(
                   "size-8",
-                  (textDraft.comments || textDraft.fix)
+                  (textDraft.account || textDraft.comments || textDraft.fix)
                     ? "text-primary"
                     : "text-muted-foreground",
                 )}
@@ -242,6 +259,17 @@ export function TestRow({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 space-y-3" align="end">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Account</label>
+                <Input
+                  className="h-8 text-sm"
+                  placeholder="Account used…"
+                  value={textDraft.account}
+                  onChange={(e) =>
+                    setTextDraft((d) => ({ ...d, account: e.target.value }))
+                  }
+                />
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Comments</label>
                 <Textarea

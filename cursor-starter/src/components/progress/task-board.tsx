@@ -59,7 +59,9 @@ export function TaskBoard({
   onMoveStatus,
   onTogglePin,
   onMarkComplete,
+  onDeleteTask,
   onReviewPatch,
+  onAddToChecklist,
   onCreateForUser,
 }: {
   boardUserId: string;
@@ -79,6 +81,8 @@ export function TaskBoard({
     },
   ) => void;
   onMarkComplete: (task: TaskWithAssignees) => void;
+  onDeleteTask: (task: TaskWithAssignees) => void;
+  onAddToChecklist: (taskId: string, fields: { platform: string | null; role: string | null; page_tab: string | null; test_step: string | null }) => void;
   onCreateForUser: (
     userId: string,
     title: string,
@@ -239,6 +243,8 @@ export function TaskBoard({
         }}
         onMove={onMoveStatus}
         onReviewPatch={onReviewPatch}
+        onAddToChecklist={onAddToChecklist}
+        onDelete={(t) => { onDeleteTask(t); setSelectedTaskId(null); }}
       />
 
       <Dialog

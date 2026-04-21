@@ -152,12 +152,13 @@ export function TestChecklistView() {
             <TestTable
               tab="new"
               rows={newRows}
-              emptyHint="No new-feature rows — they appear when Progress tasks are Waiting on Review with all review fields filled, or use Add row."
+              emptyHint="No new-feature rows — they appear when Progress tasks are Waiting on Review, or use Add row."
               showAddRow
               onAddRow={() => void checklist.addRow("new")}
               saveRowFields={saveRowFields}
               onResultPassOrFixed={onPassIntent}
               onDeleteRow={onDeleteIntent}
+              taskTitles={checklist.taskTitles}
             />
           ),
           completed: (

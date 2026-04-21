@@ -24,6 +24,7 @@ export function TestTable({
   saveRowFields,
   onResultPassOrFixed,
   onDeleteRow,
+  taskTitles,
 }: {
   tab: "core" | "new" | "completed";
   rows: TestItem[];
@@ -34,7 +35,10 @@ export function TestTable({
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (item: TestItem, next: "pass" | "fixed") => void;
   onDeleteRow?: (item: TestItem) => void;
+  taskTitles?: Record<string, string>;
 }) {
+  const colSpan = 7 + (taskTitles ? 1 : 0);
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -52,9 +56,9 @@ export function TestTable({
         <Table>
           <TableHeader>
             <TableRow>
+              {taskTitles && <TableHead className="w-8" />}
               <TableHead>Platform</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Account</TableHead>
               <TableHead>Page/Tab</TableHead>
               <TableHead>Test Step</TableHead>
               <TableHead>Result</TableHead>
@@ -67,7 +71,7 @@ export function TestTable({
               <TableRow>
                 <TableCell
                   className="py-8 text-center text-sm text-muted-foreground"
-                  colSpan={8}
+                  colSpan={colSpan}
                 >
                   {emptyHint}
                 </TableCell>
@@ -86,6 +90,12 @@ export function TestTable({
                         : undefined
                     }
                     onDelete={onDeleteRow ? () => onDeleteRow(item) : undefined}
+                    taskTitle={
+                      taskTitles && item.source_task_id
+                        ? taskTitles[item.source_task_id]
+                        : undefined
+                    }
+                    showTaskColumn={!!taskTitles}
                   />
                 ))}
               </AnimatePresence>

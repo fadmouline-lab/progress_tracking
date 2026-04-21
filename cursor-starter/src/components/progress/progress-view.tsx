@@ -88,7 +88,9 @@ export function ProgressView() {
           onMoveStatus={(t, dir) => void tasks.moveStatus(t, dir)}
           onTogglePin={(t) => void tasks.togglePin(t)}
           onMarkComplete={(t) => void tasks.markComplete(t)}
+          onDeleteTask={(t) => void tasks.deleteTask(t.id)}
           onReviewPatch={tasks.patchReviewFields}
+          onAddToChecklist={(taskId, fields) => void checklist.insertTestItemForTask(taskId, fields)}
           onCreateForUser={tasks.createTaskForUser}
         />
       </div>

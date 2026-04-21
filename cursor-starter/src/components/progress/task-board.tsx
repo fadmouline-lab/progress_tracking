@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/constants";
 import type { TaskWithAssignees } from "@/types";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,20 @@ const PRIORITY_BG: Record<number, string> = {
   3: "#eab308",
   4: "#60a5fa",
   5: "#a1a1aa",
+};
+
+const COLUMN_HEADER_CLASS: Record<string, string> = {
+  assigned: "bg-info/10",
+  working_on: "bg-brand/10",
+  waiting_review: "bg-warning/10",
+  completed: "bg-success/10",
+};
+
+const COLUMN_COUNT_CLASS: Record<string, string> = {
+  assigned: "text-info",
+  working_on: "text-brand",
+  waiting_review: "text-warning",
+  completed: "text-success",
 };
 
 export function TaskBoard({
@@ -172,11 +187,11 @@ export function TaskBoard({
           const showBadge = true;
           return (
             <section key={status} className="overflow-hidden rounded-lg border">
-              <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-3 py-2">
+              <div className={cn("flex items-center justify-between gap-2 border-b px-3 py-2", COLUMN_HEADER_CLASS[status])}>
                 <h3 className="text-sm font-semibold tracking-tight">
                   {TASK_STATUS_LABELS[status]}
                 </h3>
-                <span className="text-xs text-muted-foreground">{tasks.length}</span>
+                <span className={cn("text-xs font-medium tabular-nums", tasks.length > 0 ? COLUMN_COUNT_CLASS[status] : "text-muted-foreground")}>{tasks.length}</span>
               </div>
               <div className="flex flex-col divide-y">
                 <AnimatePresence initial={false}>

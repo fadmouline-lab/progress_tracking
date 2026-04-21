@@ -19,10 +19,12 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<"magic" | "password">("magic");
+  const [pwMode, setPwMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [signupSent, setSignupSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const callbackError = (() => {
@@ -91,13 +93,47 @@ export function LoginForm() {
     }
   }
 
+  async function handlePasswordSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { data, error: signError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+      });
+      if (signError) {
+        if (signError.status === 429 || signError.message?.toLowerCase().includes("rate limit")) {
+          setError("Too many sign-up attempts. Wait a few minutes and try again, or ask your admin to raise the Supabase rate limit.");
+        } else {
+          setError(signError.message);
+        }
+        return;
+      }
+      if (data.session) {
+        router.refresh();
+        router.push("/onboarding");
+      } else {
+        setSignupSent(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Card className="w-full max-w-md border shadow-sm">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          New here? Use a magic link first, then set a password during
-          onboarding. After that, you can sign in with email and password.
+          Sign in with a magic link or email and password. No account yet? Use
+          the Email &amp; password tab to sign up.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -111,9 +147,9 @@ export function LoginForm() {
           onValueChange={(v) => {
             setTab(v as "magic" | "password");
             setError(null);
-            if (v === "password") {
-              setSent(false);
-            }
+            setSent(false);
+            setSignupSent(false);
+            setPwMode("signin");
           }}
           className="w-full"
         >
@@ -149,36 +185,89 @@ export function LoginForm() {
             )}
           </TabsContent>
           <TabsContent value="password" className="mt-4">
-            <form onSubmit={handlePasswordSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="pw-email">Email</Label>
-                <Input
-                  id="pw-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pw-password">Password</Label>
-                <Input
-                  id="pw-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
-              </Button>
-            </form>
+            {signupSent ? (
+              <p className="text-sm text-muted-foreground">
+                Check your email to confirm your account, then come back to sign
+                in.
+              </p>
+            ) : (
+              <form
+                onSubmit={
+                  pwMode === "signin"
+                    ? handlePasswordSignIn
+                    : handlePasswordSignUp
+                }
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="pw-email">Email</Label>
+                  <Input
+                    id="pw-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pw-password">Password</Label>
+                  <Input
+                    id="pw-password"
+                    name="password"
+                    type="password"
+                    autoComplete={
+                      pwMode === "signin" ? "current-password" : "new-password"
+                    }
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading
+                    ? pwMode === "signin"
+                      ? "Signing in…"
+                      : "Creating account…"
+                    : pwMode === "signin"
+                      ? "Sign in"
+                      : "Sign up"}
+                </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  {pwMode === "signin" ? (
+                    <>
+                      No account?{" "}
+                      <button
+                        type="button"
+                        className="underline hover:text-foreground"
+                        onClick={() => {
+                          setPwMode("signup");
+                          setError(null);
+                        }}
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        className="underline hover:text-foreground"
+                        onClick={() => {
+                          setPwMode("signin");
+                          setError(null);
+                        }}
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </p>
+              </form>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

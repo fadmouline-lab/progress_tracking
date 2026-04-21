@@ -37,7 +37,7 @@ export function ProjectSelector({ open, onOpenChange, projects }: Props) {
             projects.map((p) => (
               <Link
                 key={p.id}
-                href={`/project/${p.id}/scope`}
+                href={`/project/${p.id}/progress`}
                 onClick={() => onOpenChange(false)}
               >
                 <Card className="transition-colors hover:bg-muted/60">

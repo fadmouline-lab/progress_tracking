@@ -103,7 +103,7 @@ export function CreateProjectDialog({
       setLogoFile(null);
       onOpenChange(false);
       onCreated?.();
-      router.push(`/project/${project.id}/scope`);
+      router.push(`/project/${project.id}/progress`);
       router.refresh();
     } finally {
       setLoading(false);

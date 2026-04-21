@@ -47,7 +47,11 @@ export function TestChecklistView() {
 
   const { saveRowFields } = checklist;
 
-  const coreRows = checklist.itemsByTab("core");
+  const coreRows = [...checklist.itemsByTab("core")].sort((a, b) => {
+    const aSettled = a.result === "pass" || a.result === "fixed" ? 1 : 0;
+    const bSettled = b.result === "pass" || b.result === "fixed" ? 1 : 0;
+    return aSettled - bSettled;
+  });
   const newRows = checklist.itemsByTab("new");
 
   const onSubmitCore = useCallback(async () => {

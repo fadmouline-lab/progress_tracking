@@ -12,7 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function ProfileMenu() {
   const [open, setOpen] = useState(false);
@@ -23,6 +24,7 @@ export function ProfileMenu() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [pwSaving, setPwSaving] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -178,15 +180,29 @@ export function ProfileMenu() {
                 autoComplete="new-password"
                 placeholder="Optional"
               />
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={pwSaving}
-                onClick={() => void onPassword()}
-              >
-                {pwSaving ? "Updating…" : "Update password"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pwSaving}
+                  onClick={() => void onPassword()}
+                >
+                  {pwSaving ? "Updating…" : "Update password"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    await createClient().auth.signOut();
+                    router.push("/login");
+                  }}
+                >
+                  <LogOut className="mr-1 size-3.5" />
+                  Log out
+                </Button>
+              </div>
             </div>
           </div>
         )}

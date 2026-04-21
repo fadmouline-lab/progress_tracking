@@ -1,18 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProject, useProjectSaveSlot } from "@/hooks/use-project";
 import { useTasks } from "@/hooks/use-tasks";
 import { useTestItems } from "@/hooks/use-test-items";
 import { UserProgressCard } from "@/components/progress/user-progress-card";
 import { TaskBoard } from "@/components/progress/task-board";
 import { Skeleton } from "@/components/ui/skeleton";
+import { createClient } from "@/lib/supabase/client";
 
 export function ProgressView() {
   const { projectId, members, loading: projectLoading } = useProject();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const boardUserId = selectedUserId ?? members[0]?.user_id ?? null;
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null);
+    });
+  }, []);
+
+  const defaultUserId = useMemo(() => {
+    if (currentUserId && members.some((m) => m.user_id === currentUserId))
+      return currentUserId;
+    return members[0]?.user_id ?? null;
+  }, [currentUserId, members]);
+
+  const boardUserId = selectedUserId ?? defaultUserId;
 
   const tasks = useTasks(projectId, boardUserId);
   const checklist = useTestItems(projectId);

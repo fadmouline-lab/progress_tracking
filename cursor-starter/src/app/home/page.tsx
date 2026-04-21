@@ -11,6 +11,23 @@ import { CreateProjectDialog } from "@/components/home/create-project-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "@/components/layout/profile-menu";
 import { Plus } from "lucide-react";
+import { LiquidBallBackground } from "@/components/liquid-ball-background";
+
+function Logo() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="28" height="28" rx="8" fill="url(#logo-grad)" />
+      <path d="M7 20 L7 12 L11.5 17 L14 14 L16.5 17 L21 12 L21 20" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="21" cy="10" r="2.5" fill="#86efac" />
+      <defs>
+        <linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#6366f1" />
+          <stop offset="1" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 async function loadProjects(): Promise<ProjectWithMeta[]> {
   const supabase = createClient();
@@ -66,11 +83,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-muted/20">
-      <header className="flex h-14 items-center justify-between border-b bg-background px-4">
-        <span className="text-sm font-semibold tracking-tight">
-          Team progress
-        </span>
+    <div className="flex min-h-svh flex-col bg-muted/20 md:bg-transparent">
+      <LiquidBallBackground />
+      <header className="relative z-10 flex h-14 items-center justify-between border-b bg-background px-4">
+        <div className="flex items-center gap-2.5">
+          <Logo />
+          <span className="text-sm font-semibold tracking-tight">
+            The Moulines Productivity Tracking
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <ProfileMenu />
           <ThemeToggle />
@@ -80,7 +101,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="flex w-full flex-1 flex-col px-6 py-10">
+      <main className="relative z-10 flex w-full flex-1 flex-col px-6 py-10">
         <div className="mx-auto w-full max-w-2xl">
           <div className="mb-6 flex items-center justify-between">
             <div>

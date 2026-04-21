@@ -18,7 +18,6 @@ export function OnboardingForm() {
   const router = useRouter();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,16 +58,6 @@ export function OnboardingForm() {
         avatarUrl = pub.publicUrl;
       }
 
-      if (password.trim()) {
-        const { error: pwError } = await supabase.auth.updateUser({
-          password: password.trim(),
-        });
-        if (pwError) {
-          setError(pwError.message);
-          return;
-        }
-      }
-
       const { error: profileError } = await supabase.from("profiles").upsert(
         {
           id: user.id,
@@ -95,7 +84,7 @@ export function OnboardingForm() {
       <CardHeader>
         <CardTitle>Welcome</CardTitle>
         <CardDescription>
-          Set up your profile. Password and avatar are optional.
+          Set up your profile. Avatar is optional.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,18 +99,6 @@ export function OnboardingForm() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Jane Doe"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password (optional)</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Leave blank to stay passwordless"
             />
           </div>
           <div className="space-y-2">

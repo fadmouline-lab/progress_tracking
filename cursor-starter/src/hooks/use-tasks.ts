@@ -264,6 +264,26 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
     [patchTask],
   );
 
+  const markComplete = useCallback(
+    async (task: TaskRow) => {
+      const snapshot = { ...task };
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, status: "completed" } : t)),
+      );
+      try {
+        await patchTask(task.id, { status: "completed" });
+      } catch (e) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...t, ...snapshot } : t)),
+        );
+        toast.error(
+          e instanceof Error ? e.message : "Could not complete task.",
+        );
+      }
+    },
+    [patchTask],
+  );
+
   const togglePin = useCallback(
     async (task: TaskRow) => {
       const next = !(task.is_pinned ?? false);
@@ -320,6 +340,7 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
     createTask,
     createTaskForUser,
     moveStatus,
+    markComplete,
     togglePin,
     tasksAssignedForScope,
     patchReviewFields,

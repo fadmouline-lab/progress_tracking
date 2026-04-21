@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useProject, useProjectSaveSlot } from "@/hooks/use-project";
 import { useTasks } from "@/hooks/use-tasks";
+import { useTestItems } from "@/hooks/use-test-items";
 import { UserProgressCard } from "@/components/progress/user-progress-card";
 import { TaskBoard } from "@/components/progress/task-board";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,25 @@ export function ProgressView() {
   const boardUserId = selectedUserId ?? members[0]?.user_id ?? null;
 
   const tasks = useTasks(projectId, boardUserId);
+  const checklist = useTestItems(projectId);
   useProjectSaveSlot("progress", tasks.saveState);
+
+  const testedTaskIds = useMemo(
+    () => new Set(checklist.completedNewFeatureItems.map((i) => i.source_task_id as string)),
+    [checklist.completedNewFeatureItems],
+  );
+
+  const activeTestTaskIds = useMemo(
+    () =>
+      new Set(
+        checklist.items
+          .filter((i) => i.tab !== "completed" && i.source_task_id != null)
+          .map((i) => i.source_task_id as string),
+      ),
+    [checklist.items],
+  );
+
+  const testChecklistUrl = `/project/${projectId}/test-checklist`;
 
   const selectedMember = useMemo(
     () => members.find((m) => m.user_id === boardUserId) ?? null,
@@ -63,8 +82,12 @@ export function ProgressView() {
         <TaskBoard
           boardUserId={boardUserId}
           tasksByStatus={tasks.tasksByStatus}
+          testedTaskIds={testedTaskIds}
+          activeTestTaskIds={activeTestTaskIds}
+          testChecklistUrl={testChecklistUrl}
           onMoveStatus={(t, dir) => void tasks.moveStatus(t, dir)}
           onTogglePin={(t) => void tasks.togglePin(t)}
+          onMarkComplete={(t) => void tasks.markComplete(t)}
           onReviewPatch={tasks.patchReviewFields}
           onCreateForUser={tasks.createTaskForUser}
         />

@@ -47,7 +47,7 @@ export function ScopeBullet({
     >
       <button
         type="button"
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        className="cursor-grab touch-none text-muted-foreground/40 hover:text-foreground"
         {...attributes}
         {...listeners}
         aria-label="Reorder bullet"
@@ -66,7 +66,7 @@ export function ScopeBullet({
         type="button"
         variant="ghost"
         size="icon"
-        className="shrink-0 text-muted-foreground hover:text-destructive"
+        className="shrink-0 text-muted-foreground/40 hover:text-destructive"
         onClick={() => onRemove(bullet.id)}
         aria-label="Delete bullet"
       >

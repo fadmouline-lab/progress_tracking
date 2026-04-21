@@ -19,17 +19,39 @@ import {
 import { PRIORITIES } from "@/lib/constants";
 import { TaskRow } from "@/components/progress/task-row";
 import { TaskDetailDialog } from "@/components/progress/task-detail-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const PRIORITY_BG: Record<number, string> = {
+  1: "#ef4444",
+  2: "#f97316",
+  3: "#eab308",
+  4: "#60a5fa",
+  5: "#a1a1aa",
+};
 
 export function TaskBoard({
   boardUserId,
   tasksByStatus,
+  testedTaskIds,
+  activeTestTaskIds,
+  testChecklistUrl,
   onMoveStatus,
   onTogglePin,
+  onMarkComplete,
   onReviewPatch,
   onCreateForUser,
 }: {
   boardUserId: string;
   tasksByStatus: Record<string, TaskWithAssignees[]>;
+  testedTaskIds: Set<string>;
+  activeTestTaskIds: Set<string>;
+  testChecklistUrl: string;
   onMoveStatus: (task: TaskWithAssignees, direction: "left" | "right") => void;
   onTogglePin: (task: TaskWithAssignees) => void;
   onReviewPatch: (
@@ -41,6 +63,7 @@ export function TaskBoard({
       review_test_step: string | null;
     },
   ) => void;
+  onMarkComplete: (task: TaskWithAssignees) => void;
   onCreateForUser: (
     userId: string,
     title: string,
@@ -52,6 +75,7 @@ export function TaskBoard({
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState(3);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [completingTask, setCompletingTask] = useState<TaskWithAssignees | null>(null);
 
   const selectedTask =
     selectedTaskId !== null
@@ -119,7 +143,12 @@ export function TaskBoard({
               </SelectTrigger>
               <SelectContent>
                 {PRIORITIES.map((p) => (
-                  <SelectItem key={p.value} value={String(p.value)}>
+                  <SelectItem
+                    key={p.value}
+                    value={String(p.value)}
+                    className="text-white"
+                    style={{ backgroundColor: PRIORITY_BG[p.value] }}
+                  >
                     {p.label}
                   </SelectItem>
                 ))}
@@ -137,9 +166,10 @@ export function TaskBoard({
         </motion.div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-4">
-        {TASK_STATUSES.map((status) => {
+      <div className="grid gap-4" style={{ gridTemplateColumns: "4fr 2fr 2fr 2fr" }}>
+        {TASK_STATUSES.map((status, colIdx) => {
           const tasks = tasksByStatus[status] ?? [];
+          const showBadge = true;
           return (
             <section key={status} className="overflow-hidden rounded-lg border">
               <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-3 py-2">
@@ -159,8 +189,19 @@ export function TaskBoard({
                       <TaskRow
                         key={task.id}
                         task={task}
-                        onMove={(dir) => onMoveStatus(task, dir)}
+                        showBadge={showBadge}
+                        isTested={testedTaskIds.has(task.id)}
+                        hasActiveTest={activeTestTaskIds.has(task.id)}
+                        testChecklistUrl={testChecklistUrl}
+                        onMove={(dir) => {
+                          onMoveStatus(task, dir);
+                          const nextIdx = TASK_STATUSES.indexOf(task.status as (typeof TASK_STATUSES)[number]) + (dir === "right" ? 1 : -1);
+                          if (TASK_STATUSES[nextIdx] === "waiting_review") {
+                            setSelectedTaskId(task.id);
+                          }
+                        }}
                         onTogglePin={() => onTogglePin(task)}
+                        onMarkComplete={() => setCompletingTask(task)}
                         onSelect={() => setSelectedTaskId(task.id)}
                       />
                     ))
@@ -175,13 +216,40 @@ export function TaskBoard({
       <TaskDetailDialog
         task={selectedTask}
         open={selectedTask !== null}
+        isTested={selectedTask ? testedTaskIds.has(selectedTask.id) : false}
+        hasActiveTest={selectedTask ? activeTestTaskIds.has(selectedTask.id) : false}
         onOpenChange={(open) => {
           if (!open) setSelectedTaskId(null);
         }}
         onMove={onMoveStatus}
-        onTogglePin={onTogglePin}
         onReviewPatch={onReviewPatch}
       />
+
+      <Dialog
+        open={completingTask !== null}
+        onOpenChange={(open) => {
+          if (!open) setCompletingTask(null);
+        }}
+      >
+        <DialogContent showCloseButton={false} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Mark this task as complete?</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompletingTask(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (completingTask) onMarkComplete(completingTask);
+                setCompletingTask(null);
+              }}
+            >
+              Yes, complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

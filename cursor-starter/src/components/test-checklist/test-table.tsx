@@ -56,8 +56,7 @@ export function TestTable({
               <TableHead>Page/Tab</TableHead>
               <TableHead>Test Step</TableHead>
               <TableHead>Result</TableHead>
-              <TableHead>Comments</TableHead>
-              <TableHead>Fix</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,7 +64,7 @@ export function TestTable({
               <TableRow>
                 <TableCell
                   className="py-8 text-center text-sm text-muted-foreground"
-                  colSpan={8}
+                  colSpan={7}
                 >
                   {emptyHint}
                 </TableCell>

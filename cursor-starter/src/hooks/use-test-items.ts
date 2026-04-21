@@ -118,17 +118,20 @@ export function useTestItems(projectId: string) {
         .order("sort_order", { ascending: false })
         .limit(1);
       const nextOrder = (nextRows?.[0]?.sort_order ?? -1) + 1;
-      const { error: insErr } = await supabase.from("test_items").insert({
-        project_id: projectId,
-        tab: "new",
-        source_task_id: task.id,
-        platform: task.review_platform,
-        role: task.review_role,
-        page_tab: task.review_page,
-        test_step: task.review_test_step,
-        result: "pending",
-        sort_order: nextOrder,
-      });
+      const { error: insErr } = await supabase.from("test_items").upsert(
+        {
+          project_id: projectId,
+          tab: "new",
+          source_task_id: task.id,
+          platform: task.review_platform,
+          role: task.review_role,
+          page_tab: task.review_page,
+          test_step: task.review_test_step,
+          result: "pending",
+          sort_order: nextOrder,
+        },
+        { onConflict: "project_id,source_task_id", ignoreDuplicates: true },
+      );
       if (insErr) {
         toast.error(insErr.message);
         return;

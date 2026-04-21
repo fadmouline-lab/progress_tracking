@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { MessageSquarePlus } from "lucide-react";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   PLATFORMS,
@@ -13,8 +14,14 @@ import {
 } from "@/lib/constants";
 import type { TestItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -197,23 +204,49 @@ export function TestRow({
             </SelectContent>
           </Select>
         </TableCell>
-        <TableCell className="min-w-[180px]">
-          <Textarea
-            className="min-h-[72px] resize-y"
-            value={textDraft.comments}
-            onChange={(e) =>
-              setTextDraft((d) => ({ ...d, comments: e.target.value }))
-            }
-          />
-        </TableCell>
-        <TableCell className="min-w-[180px]">
-          <Textarea
-            className="min-h-[72px] resize-y"
-            value={textDraft.fix}
-            onChange={(e) =>
-              setTextDraft((d) => ({ ...d, fix: e.target.value }))
-            }
-          />
+        <TableCell className="w-10 text-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-8",
+                  (textDraft.comments || textDraft.fix)
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+                aria-label="Comments and fix"
+              >
+                <MessageSquarePlus className="size-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 space-y-3" align="end">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Comments</label>
+                <Textarea
+                  className="min-h-[72px] resize-y text-sm"
+                  placeholder="Add comments…"
+                  value={textDraft.comments}
+                  onChange={(e) =>
+                    setTextDraft((d) => ({ ...d, comments: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Fix</label>
+                <Textarea
+                  className="min-h-[72px] resize-y text-sm"
+                  placeholder="Describe the fix…"
+                  value={textDraft.fix}
+                  onChange={(e) =>
+                    setTextDraft((d) => ({ ...d, fix: e.target.value }))
+                  }
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
         </TableCell>
     </motion.tr>
   );

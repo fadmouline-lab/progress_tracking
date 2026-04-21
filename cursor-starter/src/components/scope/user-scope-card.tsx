@@ -120,7 +120,14 @@ export function UserScopeCard({
               variant="ghost"
               className="flex w-full justify-between px-0 text-left"
             >
-              <span className="text-sm font-medium">Assigned tasks (read-only)</span>
+              <span className="flex items-center gap-2 text-sm font-medium">
+                Assigned Tasks Needing Review
+                {assignedTasks.length > 0 && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+                    {assignedTasks.length}
+                  </span>
+                )}
+              </span>
               {tasksOpen ? (
                 <ChevronDown className="size-4 shrink-0" />
               ) : (

@@ -18,7 +18,7 @@ export function TestChecklistView() {
   const checklist = useTestItems(projectId);
   useProjectSaveSlot("test", checklist.saveState);
 
-  const [sub, setSub] = useState<"core" | "new" | "completed">("core");
+  const [sub, setSub] = useState<"core" | "new" | "completed">("new");
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null);
 
   const [passOpen, setPassOpen] = useState(false);

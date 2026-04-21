@@ -102,7 +102,7 @@ export const TEST_RESULT_STYLES: Record<
 };
 
 export const TEST_CHECKLIST_SUBTABS = [
-  { id: "core" as const, label: "Core Features" },
   { id: "new" as const, label: "New Features" },
+  { id: "core" as const, label: "Core Features" },
   { id: "completed" as const, label: "Completed" },
 ];

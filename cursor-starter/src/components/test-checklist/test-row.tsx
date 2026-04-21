@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, Monitor, Smartphone } from "lucide-react";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import {
   PLATFORMS,
@@ -93,6 +93,20 @@ export function TestRow({
   const resultStyle =
     TEST_RESULT_STYLES[item.result] ?? TEST_RESULT_STYLES.pending;
 
+  const ROW_BG: Record<string, string> = {
+    pending: "",
+    pass: "bg-emerald-50/70 dark:bg-emerald-950/20",
+    fail: "bg-red-50/70 dark:bg-red-950/20",
+    fixed: "bg-sky-50/70 dark:bg-sky-950/20",
+  };
+
+  const RESULT_DOT: Record<string, string> = {
+    pending: "bg-muted-foreground/40",
+    pass: "bg-emerald-500",
+    fail: "bg-red-500",
+    fixed: "bg-sky-500",
+  };
+
   return (
     <motion.tr
       layout
@@ -101,7 +115,7 @@ export function TestRow({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 80, transition: { duration: 0.22 } }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      className="hover:bg-muted/50 border-b transition-colors align-top"
+      className={cn("hover:bg-muted/50 border-b transition-colors align-top", ROW_BG[item.result])}
     >
         <TableCell className="min-w-[120px]">
           <Select
@@ -113,6 +127,8 @@ export function TestRow({
             }
           >
             <SelectTrigger className="h-9">
+              {item.platform === "web" && <Monitor className="size-3.5 shrink-0 text-muted-foreground" />}
+              {item.platform === "mobile" && <Smartphone className="size-3.5 shrink-0 text-muted-foreground" />}
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
             <SelectContent>
@@ -193,6 +209,7 @@ export function TestRow({
             <SelectTrigger
               className={cn("h-9 capitalize", resultStyle.trigger)}
             >
+              <span className={cn("size-2 shrink-0 rounded-full", RESULT_DOT[item.result])} />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

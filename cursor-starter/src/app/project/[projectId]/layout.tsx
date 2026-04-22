@@ -2,6 +2,7 @@ import { ProjectProvider } from "@/components/project/project-provider";
 import { ProjectShellBar } from "@/components/project/project-shell-bar";
 import { ProjectHeader } from "@/components/project/project-header";
 import { ProjectTabs } from "@/components/project/project-tabs";
+import { AnimatedTabContent } from "@/components/project/animated-tab-content";
 
 export default async function ProjectLayout({
   children,
@@ -18,7 +19,7 @@ export default async function ProjectLayout({
         <ProjectShellBar />
         <ProjectHeader />
         <ProjectTabs />
-        <div className="flex-1 overflow-auto p-3 md:p-6">{children}</div>
+        <AnimatedTabContent>{children}</AnimatedTabContent>
       </div>
     </ProjectProvider>
   );

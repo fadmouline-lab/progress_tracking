@@ -22,7 +22,7 @@ export function useTestItems(projectId: string) {
   const [batches, setBatches] = useState<TestBatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [taskTitles, setTaskTitles] = useState<Record<string, string>>({});
+  const [taskTitles, setTaskTitles] = useState<Record<string, { title: string; assignee: string | null }>>({});
 
   const runWithSaveState = useCallback(async (fn: () => Promise<void>) => {
     setSaveState("saving");
@@ -68,13 +68,20 @@ export function useTestItems(projectId: string) {
       .map((i) => i.source_task_id)
       .filter(Boolean) as string[];
     if (sourceIds.length > 0) {
+      // Single query: join task_assignees and profiles in one round-trip
       const { data: taskData } = await supabase
         .from("tasks")
-        .select("id, title")
+        .select("id, title, task_assignees(user_id, profiles:profiles(id, full_name, email))")
         .in("id", sourceIds);
-      const map: Record<string, string> = {};
+
+      const map: Record<string, { title: string; assignee: string | null }> = {};
       for (const t of taskData ?? []) {
-        map[t.id] = t.title;
+        type AssigneeRow = { user_id: string; profiles: { id: string; full_name: string | null; email: string | null }[] };
+        const assignees = (t.task_assignees ?? []) as unknown as AssigneeRow[];
+        const firstAssignee = assignees[0];
+        const profile = firstAssignee?.profiles?.[0];
+        const name = profile?.full_name ?? profile?.email ?? null;
+        map[t.id] = { title: t.title, assignee: name };
       }
       setTaskTitles(map);
     } else {
@@ -426,13 +433,43 @@ export function useTestItems(projectId: string) {
       fields: { platform: string | null; role: string | null; page_tab: string | null; test_step: string | null },
     ) => {
       const supabase = createClient();
+
+      // Commit the review fields to the task — button is the save action, not auto-save
+      await supabase
+        .from("tasks")
+        .update({
+          review_platform: fields.platform,
+          review_role: fields.role,
+          review_page: fields.page_tab,
+          review_test_step: fields.test_step,
+        })
+        .eq("id", taskId);
+
       const { data: existing } = await supabase
         .from("test_items")
-        .select("id")
+        .select("id, tab")
         .eq("project_id", projectId)
         .eq("source_task_id", taskId)
         .maybeSingle();
-      if (existing) return;
+      if (existing) {
+        if (existing.tab !== "completed") {
+          const { error: updateErr } = await supabase
+            .from("test_items")
+            .update({
+              platform: fields.platform,
+              role: fields.role,
+              page_tab: fields.page_tab,
+              test_step: fields.test_step,
+            })
+            .eq("id", existing.id);
+          if (updateErr) {
+            toast.error(updateErr.message);
+            return;
+          }
+          await loadAll();
+        }
+        return;
+      }
       const { data: nextRows } = await supabase
         .from("test_items")
         .select("sort_order")
@@ -441,20 +478,17 @@ export function useTestItems(projectId: string) {
         .order("sort_order", { ascending: false })
         .limit(1);
       const nextOrder = (nextRows?.[0]?.sort_order ?? -1) + 1;
-      const { error } = await supabase.from("test_items").upsert(
-        {
-          project_id: projectId,
-          tab: "new",
-          source_task_id: taskId,
-          platform: fields.platform,
-          role: fields.role,
-          page_tab: fields.page_tab,
-          test_step: fields.test_step,
-          result: "pending",
-          sort_order: nextOrder,
-        },
-        { onConflict: "project_id,source_task_id", ignoreDuplicates: true },
-      );
+      const { error } = await supabase.from("test_items").insert({
+        project_id: projectId,
+        tab: "new",
+        source_task_id: taskId,
+        platform: fields.platform,
+        role: fields.role,
+        page_tab: fields.page_tab,
+        test_step: fields.test_step,
+        result: "pending",
+        sort_order: nextOrder,
+      });
       if (error) {
         toast.error(error.message);
         return;

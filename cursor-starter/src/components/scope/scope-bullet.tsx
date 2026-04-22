@@ -41,7 +41,7 @@ export function ScopeBullet({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-2 rounded-md border bg-card p-2 shadow-xs",
+        "flex items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-xs",
         isDragging && "opacity-70 ring-2 ring-primary/30",
       )}
     >
@@ -55,7 +55,7 @@ export function ScopeBullet({
         <GripVertical className="size-4" />
       </button>
       <Input
-        className="flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+        className="flex-1 border-0 bg-transparent dark:bg-transparent px-0 shadow-none focus-visible:ring-0"
         value={bullet.content}
         onChange={(e) => {
           const v = e.target.value;

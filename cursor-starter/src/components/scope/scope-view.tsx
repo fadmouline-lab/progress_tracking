@@ -3,7 +3,6 @@
 import { useProject, useProjectSaveSlot } from "@/hooks/use-project";
 import { useScopeBullets } from "@/hooks/use-scope-bullets";
 import { useTasks } from "@/hooks/use-tasks";
-import { TaskInputBar } from "@/components/scope/task-input-bar";
 import { UserScopeCard } from "@/components/scope/user-scope-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,11 +26,6 @@ export function ScopeView() {
 
   return (
     <div className="relative mx-auto max-w-6xl space-y-8">
-      <TaskInputBar
-        members={members}
-        onCreateTask={tasks.createTask}
-      />
-
       {members.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No members on this project yet — add people from the database or recreate the project.

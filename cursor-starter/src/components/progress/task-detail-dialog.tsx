@@ -61,7 +61,7 @@ export function TaskDetailDialog({
         review_test_step: task.review_test_step,
       });
     }
-  }, [task?.id, task?.review_platform, task?.review_role, task?.review_page, task?.review_test_step]);
+  }, [task?.id]);
 
   if (!task) return null;
 

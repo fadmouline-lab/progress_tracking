@@ -71,7 +71,7 @@ export function TestCard({
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (next: "pass" | "fixed") => void;
   onDelete?: () => void;
-  taskTitle?: string;
+  taskTitle?: { title: string; assignee: string | null };
   showTaskColumn?: boolean;
 }) {
   const [textDraft, setTextDraft] = useState<TextDraft>(() => draftFromItem(item));
@@ -171,9 +171,14 @@ export function TestCard({
 
       {/* Task reference (if available) */}
       {showTaskColumn && taskTitle && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Info className="size-3.5 shrink-0" />
-          <span className="truncate">{taskTitle}</span>
+        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Info className="size-3.5 mt-px shrink-0" />
+          <div className="min-w-0">
+            <p className="truncate">{taskTitle.title}</p>
+            {taskTitle.assignee && (
+              <p className="truncate text-muted-foreground/70">{taskTitle.assignee}</p>
+            )}
+          </div>
         </div>
       )}
 
@@ -321,7 +326,7 @@ export function TestCardList({
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (item: TestItem, next: "pass" | "fixed") => void;
   onDeleteRow?: (item: TestItem) => void;
-  taskTitles?: Record<string, string>;
+  taskTitles?: Record<string, { title: string; assignee: string | null }>;
 }) {
   return (
     <div className="space-y-3">

@@ -78,11 +78,12 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
   useEffect(() => {
     const supabase = createClient();
     let t: ReturnType<typeof setTimeout> | null = null;
+    let mounted = true;
     const schedule = () => {
       if (t) clearTimeout(t);
       t = setTimeout(() => {
         t = null;
-        void refresh();
+        if (mounted) void refresh();
       }, 200);
     };
     const channel = supabase
@@ -119,6 +120,7 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
       )
       .subscribe();
     return () => {
+      mounted = false;
       if (t) clearTimeout(t);
       void supabase.removeChannel(channel);
     };
@@ -153,12 +155,39 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
       assigneeUserIds: string[];
       createdBy: string | null;
     }) => {
-      const supabase = createClient();
       const title = input.title.trim();
       if (!title) return;
+
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const now = new Date().toISOString();
+      const tempTask: TaskRow = {
+        id: tempId,
+        project_id: projectId,
+        title,
+        priority: input.priority,
+        status: "assigned",
+        is_pinned: false,
+        created_by: input.createdBy,
+        created_at: now,
+        updated_at: now,
+        sort_order: 0,
+        review_platform: null,
+        review_role: null,
+        review_page: null,
+        review_test_step: null,
+        task_assignees: input.assigneeUserIds.map((uid) => ({
+          id: `temp-${uid}`,
+          task_id: tempId,
+          user_id: uid,
+        })),
+      };
+
+      setTasks((prev) => [...prev, tempTask]);
       setSaveState("saving");
+
+      const supabase = createClient();
       try {
-        const { data: task, error } = await supabase
+        const { data: task, error: tErr } = await supabase
           .from("tasks")
           .insert({
             project_id: projectId,
@@ -167,29 +196,43 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
             status: "assigned",
             created_by: input.createdBy,
           })
-          .select("*, task_assignees(id, task_id, user_id)")
+          .select("id")
           .single();
-        if (error) throw new Error(error.message);
+        if (tErr) throw new Error(tErr.message);
+
         const taskId = task.id as string;
+
         if (input.assigneeUserIds.length > 0) {
           const { error: aErr } = await supabase.from("task_assignees").insert(
-            input.assigneeUserIds.map((user_id) => ({
-              task_id: taskId,
-              user_id,
-            })),
+            input.assigneeUserIds.map((user_id) => ({ task_id: taskId, user_id })),
           );
-          if (aErr) throw new Error(aErr.message);
+          if (aErr) {
+            // Rollback orphaned task from DB
+            await supabase.from("tasks").delete().eq("id", taskId);
+            throw new Error(aErr.message);
+          }
         }
+
         const { data: full, error: fErr } = await supabase
           .from("tasks")
           .select("*, task_assignees(id, task_id, user_id)")
           .eq("id", taskId)
           .single();
         if (fErr) throw new Error(fErr.message);
-        setTasks((prev) => [...prev, full as TaskRow]);
+
+        setTasks((prev) => {
+          const idx = prev.findIndex((t) => t.id === tempId);
+          if (idx !== -1) {
+            const updated = [...prev];
+            updated[idx] = full as TaskRow;
+            return updated;
+          }
+          return [...prev, full as TaskRow];
+        });
         setSaveState("saved");
         setTimeout(() => setSaveState("idle"), 1200);
       } catch (e) {
+        setTasks((prev) => prev.filter((t) => t.id !== tempId));
         setSaveState("error");
         toast.error(
           e instanceof Error ? e.message : "Could not create task.",
@@ -308,7 +351,7 @@ export function useTasks(projectId: string, selectedUserId: string | null) {
   const tasksAssignedForScope = useCallback(
     (userId: string) => {
       return sortTasksForBoard(
-        tasksForUser(tasks, userId).filter((t) => t.status === "assigned"),
+        tasksForUser(tasks, userId).filter((t) => t.status !== "completed"),
       );
     },
     [tasks],

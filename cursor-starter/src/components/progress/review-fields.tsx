@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { useRef, useState } from "react";
 import { PLATFORMS, ROLE_LABELS, ROLES } from "@/lib/constants";
 import type { TaskWithAssignees } from "@/types";
-import { useAutoSave } from "@/hooks/use-auto-save";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -30,48 +27,22 @@ export function ReviewFields({
   task: TaskWithAssignees;
   onPatch: (id: string, fields: ReviewValue) => void;
 }) {
-  const initial = useMemo<ReviewValue>(
-    () => ({
-      review_platform: task.review_platform,
-      review_role: task.review_role,
-      review_page: task.review_page ?? "",
-      review_test_step: task.review_test_step ?? "",
-    }),
-    [task.review_platform, task.review_role, task.review_page, task.review_test_step],
-  );
-
-  const [value, setValue] = useState<ReviewValue>(initial);
-
-  useEffect(() => {
-    setValue(initial);
-  }, [initial]);
-
-  useAutoSave(value, async (next) => {
-    try {
-      const supabase = createClient();
-      const payload = {
-        review_platform: next.review_platform,
-        review_role: next.review_role,
-        review_page: next.review_page?.trim() ? next.review_page.trim() : null,
-        review_test_step: next.review_test_step?.trim()
-          ? next.review_test_step.trim()
-          : null,
-      };
-      const { error } = await supabase
-        .from("tasks")
-        .update(payload)
-        .eq("id", task.id);
-      if (error) throw new Error(error.message);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save review fields.");
-      throw e;
-    }
+  const [value, setValue] = useState<ReviewValue>({
+    review_platform: task.review_platform,
+    review_role: task.review_role,
+    review_page: task.review_page ?? "",
+    review_test_step: task.review_test_step ?? "",
   });
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function update(partial: Partial<ReviewValue>) {
     const next = { ...value, ...partial };
     setValue(next);
-    onPatch(task.id, next);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onPatch(task.id, next);
+    }, 300);
   }
 
   const platformValue = value.review_platform ?? "__none__";

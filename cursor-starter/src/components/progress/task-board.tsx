@@ -93,6 +93,7 @@ export function TaskBoard({
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState(3);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [completingTask, setCompletingTask] = useState<TaskWithAssignees | null>(null);
   const [mobileTab, setMobileTab] = useState<string>("working_on");
@@ -111,15 +112,20 @@ export function TaskBoard({
 
   async function submitInline() {
     const trimmed = title.trim();
-    if (!trimmed) return;
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    await onCreateForUser(boardUserId, trimmed, priority, user?.id ?? null);
-    setTitle("");
-    setPriority(3);
-    setAdding(false);
+    if (!trimmed || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await onCreateForUser(boardUserId, trimmed, priority, user?.id ?? null);
+      setTitle("");
+      setPriority(3);
+      setAdding(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -141,7 +147,7 @@ export function TaskBoard({
           layout
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-3 rounded-lg border bg-muted/30 p-4 md:grid-cols-[1fr_160px_auto]"
+          className="grid gap-y-3 gap-x-8 rounded-lg border bg-muted/30 p-4 md:grid-cols-[1fr_160px_auto]"
         >
           <div className="space-y-2">
             <Label htmlFor="inline-task-title">Title</Label>
@@ -183,11 +189,11 @@ export function TaskBoard({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-end gap-2">
-            <Button type="button" onClick={() => void submitInline()}>
-              Save
+          <div className="flex items-end gap-2 md:ml-10">
+            <Button type="button" onClick={() => void submitInline()} disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : "Save"}
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
+            <Button type="button" variant="ghost" onClick={() => setAdding(false)} disabled={isSubmitting}>
               Cancel
             </Button>
           </div>
@@ -224,43 +230,52 @@ export function TaskBoard({
           })}
         </div>
 
-        {TASK_STATUSES.filter((s) => s === mobileTab).map((status) => {
-          const tasks = tasksByStatus[status] ?? [];
-          return (
-            <section key={status} className="mt-2 overflow-hidden rounded-lg border">
-              <div className={cn("flex items-center justify-between gap-2 border-b px-3 py-2", COLUMN_HEADER_CLASS[status])}>
-                <h3 className="text-sm font-semibold tracking-tight">{TASK_STATUS_LABELS[status]}</h3>
-                <span className={cn("text-xs font-medium tabular-nums", tasks.length > 0 ? COLUMN_COUNT_CLASS[status] : "text-muted-foreground")}>{tasks.length}</span>
-              </div>
-              <div className="flex flex-col divide-y">
-                <AnimatePresence initial={false}>
-                  {tasks.length === 0 ? (
-                    <p className="px-3 py-4 text-xs text-muted-foreground">No tasks yet.</p>
-                  ) : (
-                    tasks.map((task) => (
-                      <TaskRow
-                        key={task.id}
-                        task={task}
-                        showBadge={true}
-                        isTested={testedTaskIds.has(task.id)}
-                        hasActiveTest={activeTestTaskIds.has(task.id)}
-                        testChecklistUrl={testChecklistUrl}
-                        onMove={(dir) => {
-                          onMoveStatus(task, dir);
-                          const nextIdx = TASK_STATUSES.indexOf(task.status as (typeof TASK_STATUSES)[number]) + (dir === "right" ? 1 : -1);
-                          if (TASK_STATUSES[nextIdx] === "waiting_review") setSelectedTaskId(task.id);
-                        }}
-                        onTogglePin={() => onTogglePin(task)}
-                        onMarkComplete={() => setCompletingTask(task)}
-                        onSelect={() => setSelectedTaskId(task.id)}
-                      />
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
-            </section>
-          );
-        })}
+        <AnimatePresence mode="wait" initial={false}>
+          {TASK_STATUSES.filter((s) => s === mobileTab).map((status) => {
+            const tasks = tasksByStatus[status] ?? [];
+            return (
+              <motion.section
+                key={status}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="mt-2 overflow-hidden rounded-lg border"
+              >
+                <div className={cn("flex items-center justify-between gap-2 border-b px-3 py-2", COLUMN_HEADER_CLASS[status])}>
+                  <h3 className="text-sm font-semibold tracking-tight">{TASK_STATUS_LABELS[status]}</h3>
+                  <span className={cn("text-xs font-medium tabular-nums", tasks.length > 0 ? COLUMN_COUNT_CLASS[status] : "text-muted-foreground")}>{tasks.length}</span>
+                </div>
+                <div className="flex flex-col divide-y">
+                  <AnimatePresence initial={false}>
+                    {tasks.length === 0 ? (
+                      <p className="px-3 py-4 text-xs text-muted-foreground">No tasks yet.</p>
+                    ) : (
+                      tasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          showBadge={true}
+                          isTested={testedTaskIds.has(task.id)}
+                          hasActiveTest={activeTestTaskIds.has(task.id)}
+                          testChecklistUrl={testChecklistUrl}
+                          onMove={(dir) => {
+                            onMoveStatus(task, dir);
+                            const nextIdx = TASK_STATUSES.indexOf(task.status as (typeof TASK_STATUSES)[number]) + (dir === "right" ? 1 : -1);
+                            if (TASK_STATUSES[nextIdx] === "waiting_review") setSelectedTaskId(task.id);
+                          }}
+                          onTogglePin={() => onTogglePin(task)}
+                          onMarkComplete={() => setCompletingTask(task)}
+                          onSelect={() => setSelectedTaskId(task.id)}
+                        />
+                      ))
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.section>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       {/* Desktop: 4-column grid (hidden on mobile) */}

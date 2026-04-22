@@ -69,7 +69,7 @@ export function TestRow({
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (next: "pass" | "fixed") => void;
   onDelete?: () => void;
-  taskTitle?: string;
+  taskTitle?: { title: string; assignee: string | null };
   showTaskColumn?: boolean;
 }) {
   const [textDraft, setTextDraft] = useState<TextDraft>(() => draftFromItem(item));
@@ -127,7 +127,7 @@ export function TestRow({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 80, transition: { duration: 0.22 } }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      className={cn("hover:bg-muted/50 border-b transition-colors align-top", ROW_BG[item.result])}
+      className={cn("hover:bg-muted/50 border-b align-top transition-colors duration-[180ms] ease-out", ROW_BG[item.result])}
     >
         {showTaskColumn && (
           <TableCell className="w-8 pl-1 text-center">
@@ -137,8 +137,11 @@ export function TestRow({
                   <TooltipTrigger asChild>
                     <Info className="size-3.5 text-muted-foreground/40 cursor-default mx-auto" />
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-[220px] text-[0.975rem]">
-                    {taskTitle}
+                  <TooltipContent side="right" className="max-w-[240px] space-y-0.5">
+                    <p className="text-sm font-medium">{taskTitle.title}</p>
+                    {taskTitle.assignee && (
+                      <p className="text-xs text-muted-foreground">{taskTitle.assignee}</p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

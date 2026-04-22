@@ -35,7 +35,7 @@ export function TestTable({
   saveRowFields: (id: string, patch: Partial<TestItem>) => Promise<void>;
   onResultPassOrFixed?: (item: TestItem, next: "pass" | "fixed") => void;
   onDeleteRow?: (item: TestItem) => void;
-  taskTitles?: Record<string, string>;
+  taskTitles?: Record<string, { title: string; assignee: string | null }>;
 }) {
   const colSpan = 7 + (taskTitles ? 1 : 0);
 

@@ -30,11 +30,13 @@ export function AutoSaveIndicator({
   if (state === "saving") {
     return (
       <div
+        role="status"
         className={cn(
           "pointer-events-none flex items-center gap-1 rounded-full border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm",
           className,
         )}
         aria-live="polite"
+        aria-label="Saving"
       >
         <Loader2 className="size-3.5 animate-spin" />
         Saving
@@ -45,11 +47,13 @@ export function AutoSaveIndicator({
   if (state === "saved") {
     return (
       <div
+        role="status"
         className={cn(
           "pointer-events-none flex items-center gap-1 rounded-full border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm",
           className,
         )}
         aria-live="polite"
+        aria-label="Saved"
       >
         <Check className="size-3.5 text-emerald-600" />
         Saved

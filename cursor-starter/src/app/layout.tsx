@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cursor Starter",
+  title: "The Moulines Productivity Tracking",
   description: "Production-ready Next.js starter for rapid AI-assisted development",
 };
 

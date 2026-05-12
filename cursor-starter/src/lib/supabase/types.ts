@@ -268,6 +268,61 @@ export interface Database {
           created_at?: string;
         };
       };
+      project_pipeline_entries: {
+        Row: {
+          id: string;
+          project_id: string;
+          content: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          content: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          content?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+      };
+      project_files: {
+        Row: {
+          id: string;
+          project_id: string;
+          display_name: string;
+          storage_path: string;
+          content_type: string | null;
+          size_bytes: number | null;
+          uploaded_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          display_name: string;
+          storage_path: string;
+          content_type?: string | null;
+          size_bytes?: number | null;
+          uploaded_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          display_name?: string;
+          storage_path?: string;
+          content_type?: string | null;
+          size_bytes?: number | null;
+          uploaded_by?: string | null;
+          created_at?: string;
+        };
+      };
     };
   };
 }

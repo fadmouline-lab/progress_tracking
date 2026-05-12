@@ -7,12 +7,14 @@ insert into storage.buckets (id, name, public)
 values ('project-logos', 'project-logos', true)
 on conflict (id) do nothing;
 
+drop policy if exists "Authenticated access avatars" on storage.objects;
 create policy "Authenticated access avatars"
 on storage.objects for all
 to authenticated
 using (bucket_id = 'avatars')
 with check (bucket_id = 'avatars');
 
+drop policy if exists "Authenticated access project-logos" on storage.objects;
 create policy "Authenticated access project-logos"
 on storage.objects for all
 to authenticated

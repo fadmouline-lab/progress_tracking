@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardCheck, Columns2, ListTodo } from "lucide-react";
+import {
+  ClipboardCheck,
+  Columns2,
+  FolderOpen,
+  ListTodo,
+  Workflow,
+} from "lucide-react";
 import { useProjectContext } from "@/components/project/project-provider";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +16,8 @@ const tabs = [
   { href: "progress", label: "Progress", icon: Columns2 },
   { href: "test-checklist", label: "Test Checklist", icon: ClipboardCheck },
   { href: "scope", label: "Scope", icon: ListTodo },
+  { href: "pipeline", label: "Pipeline", icon: Workflow },
+  { href: "file-storage", label: "File Storage", icon: FolderOpen },
 ] as const;
 
 export function ProjectTabs() {

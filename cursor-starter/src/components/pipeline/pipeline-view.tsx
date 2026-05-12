@@ -14,6 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { Trash2 } from "lucide-react";
 
 function displayNameForUser(
   members: { user_id: string; profile: { full_name: string | null; email: string } | null }[],
@@ -31,6 +33,10 @@ export function PipelineView() {
   const [draft, setDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectPipelineEntry | null>(
+    null,
+  );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -115,6 +121,28 @@ export function PipelineView() {
     }
   }
 
+  async function confirmDeletePipeline() {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: delErr } = await supabase
+        .from("project_pipeline_entries")
+        .delete()
+        .eq("id", deleteTarget.id)
+        .eq("project_id", projectId);
+      if (delErr) {
+        setError(delErr.message);
+        throw new Error(delErr.message);
+      }
+      setDeleteTarget(null);
+      await load();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (projectLoading || loading) {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
@@ -126,12 +154,17 @@ export function PipelineView() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Pipeline</CardTitle>
           <CardDescription>
             Capture ideas and long-running threads for this project. Everyone on
-            the project can add lines; newest appear first.
+            the project can add or remove lines; newest appear first.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -148,11 +181,6 @@ export function PipelineView() {
                 {submitting ? "Adding…" : "Add to pipeline"}
               </Button>
             </div>
-            {error ? (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            ) : null}
           </form>
         </CardContent>
       </Card>
@@ -170,14 +198,27 @@ export function PipelineView() {
             {entries.map((row) => (
               <li key={row.id}>
                 <Card className="py-4 shadow-none">
-                  <CardContent className="space-y-2 px-4">
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {row.content}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {nameByUser(row.created_by)} ·{" "}
-                      {new Date(row.created_at).toLocaleString()}
-                    </p>
+                  <CardContent className="flex flex-col gap-2 px-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {row.content}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {nameByUser(row.created_by)} ·{" "}
+                        {new Date(row.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                      disabled={deletingId === row.id}
+                      aria-label="Delete pipeline entry"
+                      onClick={() => setDeleteTarget(row)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
                   </CardContent>
                 </Card>
               </li>
@@ -185,6 +226,18 @@ export function PipelineView() {
           </ul>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete pipeline entry?"
+        description="This removes the line for everyone on the project. You cannot undo it."
+        confirmLabel={deletingId ? "Deleting…" : "Delete"}
+        destructive
+        onConfirm={confirmDeletePipeline}
+      />
     </div>
   );
 }

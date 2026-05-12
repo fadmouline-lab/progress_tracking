@@ -15,7 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 function formatBytes(n: number | null) {
   if (n == null || n <= 0) return "—";
@@ -50,6 +51,10 @@ export function FileStorageView() {
   const [renameDraft, setRenameDraft] = useState("");
   const [savingRenameId, setSavingRenameId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [fileDeleteTarget, setFileDeleteTarget] = useState<ProjectFile | null>(
+    null,
+  );
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -215,6 +220,38 @@ export function FileStorageView() {
     }
   }
 
+  async function confirmDeleteFile() {
+    if (!fileDeleteTarget) return;
+    const path = fileDeleteTarget.storage_path;
+    const id = fileDeleteTarget.id;
+    setDeletingFileId(id);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: dbErr } = await supabase
+        .from("project_files")
+        .delete()
+        .eq("id", id)
+        .eq("project_id", projectId);
+      if (dbErr) {
+        setError(dbErr.message);
+        throw new Error(dbErr.message);
+      }
+      const { error: storageErr } = await supabase.storage
+        .from("project-files")
+        .remove([path]);
+      if (storageErr) {
+        setError(
+          `Removed from the list, but storage cleanup failed: ${storageErr.message}`,
+        );
+      }
+      setFileDeleteTarget(null);
+      await load();
+    } finally {
+      setDeletingFileId(null);
+    }
+  }
+
   if (projectLoading || loading) {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
@@ -226,12 +263,17 @@ export function FileStorageView() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>File storage</CardTitle>
           <CardDescription>
-            Upload files for this project, give them a friendly name, and
-            download anything teammates have shared.
+            Upload files for this project, give them a friendly name, download
+            shared files, or delete ones you no longer need.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -257,11 +299,6 @@ export function FileStorageView() {
                 placeholder="e.g. Q1 roadmap.pdf"
               />
             </div>
-            {error ? (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            ) : null}
             <Button type="submit" disabled={uploading || !uploadFile}>
               {uploading ? (
                 <>
@@ -339,23 +376,35 @@ export function FileStorageView() {
                         {row.content_type ? ` · ${row.content_type}` : ""}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="shrink-0"
-                      disabled={downloadingId === row.id}
-                      onClick={() => void handleDownload(row)}
-                    >
-                      {downloadingId === row.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Download className="mr-1.5 size-4" />
-                          Download
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={downloadingId === row.id}
+                        onClick={() => void handleDownload(row)}
+                      >
+                        {downloadingId === row.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Download className="mr-1.5 size-4" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-muted-foreground hover:text-destructive"
+                        disabled={deletingFileId === row.id}
+                        onClick={() => setFileDeleteTarget(row)}
+                      >
+                        <Trash2 className="mr-1.5 size-4" />
+                        Delete
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </li>
@@ -363,6 +412,22 @@ export function FileStorageView() {
           </ul>
         )}
       </div>
+
+      <ConfirmDialog
+        open={fileDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setFileDeleteTarget(null);
+        }}
+        title="Delete this file?"
+        description={
+          fileDeleteTarget
+            ? `“${fileDeleteTarget.display_name}” will be removed for everyone and the stored bytes will be deleted.`
+            : ""
+        }
+        confirmLabel={deletingFileId ? "Deleting…" : "Delete"}
+        destructive
+        onConfirm={confirmDeleteFile}
+      />
     </div>
   );
 }
